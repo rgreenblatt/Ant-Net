@@ -5,7 +5,7 @@ PROJECT ( g_test C CXX )
 
 cmake_minimum_required(VERSION 3.1)
 
-add_definitions(-std=c++14 -Wall -Wextra -Wconversion -g)
+add_definitions(-std=c++14 -Wall -Wextra -g)
 
 find_package(GTest REQUIRED)
 find_package (Eigen3 REQUIRED NO_MODULE)
@@ -33,6 +33,7 @@ add_executable(app
     "${PROJECT_SOURCE_DIR}/src/hsv_to_rgb.cpp"
     "${PROJECT_SOURCE_DIR}/src/main.cpp"
     "${PROJECT_SOURCE_DIR}/src/run_ant_main.cpp"
+    "${PROJECT_SOURCE_DIR}/src/display.cpp"
 )
 
 add_executable(generator 
@@ -42,6 +43,14 @@ add_executable(generator
     "${PROJECT_SOURCE_DIR}/src/run_ant_main.cpp"
 )
 
+add_executable(generated_to_pic
+    "${PROJECT_SOURCE_DIR}/src/ant.cpp"
+    "${PROJECT_SOURCE_DIR}/src/generated_to_pic.cpp"
+    "${PROJECT_SOURCE_DIR}/src/display.cpp"
+    "${PROJECT_SOURCE_DIR}/src/hsv_to_rgb.cpp"
+)
+
 target_link_libraries(app ${EIGEN_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} ${GLEW_LIBRARY} pthread) 
 target_link_libraries(tests ${GTEST_LIBRARIES} ${EIGEN_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} ${GLEW_LIBRARY} pthread) 
 target_link_libraries(generator ${EIGEN_LIBRARIES} ${GSL_LIBRARIES}) 
+target_link_libraries(generated_to_pic ${EIGEN_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} ${GLEW_LIBRARY} pthread) 

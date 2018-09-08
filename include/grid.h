@@ -54,12 +54,7 @@ namespace grid {
             auto &column = patches[location[0] + patches.size() / 2];
             auto &this_patch = column[location[1] + column.size() / 2];
 
-            
-            if(patches.size() - 1 < location[0] + patches.size() / 2 || column.size() - 1 < location[1] + column.size() / 2) {
-                std::cout << location << std::endl;
-            }
-
-            auto &ant_movement = states[this_patch.state_index % states.size()].ant_relative_direction;
+            auto ant_movement = states[this_patch.state_index % states.size()].ant_relative_direction;
             this_patch.state_index++;
 
             return ant_movement;

@@ -3,8 +3,50 @@
 #include <string>
 #include <gsl/gsl_sf_pow_int.h>
 #include "possible_states.h"
+#include <fstream>
+#include <sstream>
 
 void run_ant_main(grid::grid &squares, ant::ant_interface * ants, unsigned int num_ants);
+
+void write_binary_blob(std::string file_dir, const grid::grid &log_grid) {
+    
+    std::stringstream file_name;
+    
+    file_name << file_dir << "/generated_data";
+
+    for(const auto &this_state : log_grid.states) {
+        file_name << "__" << this_state.ant_relative_direction[0] << "_" << this_state.ant_relative_direction[1];
+    }
+
+    file_name << ".antgen";
+
+    std::ofstream out_file;
+
+    out_file.open(file_name.str(), std::ios::out | std::ios::binary);
+
+    size_t x_size = log_grid.patches.size();
+    size_t y_size = log_grid.patches[0].size();
+
+    char size_data[2];
+
+    std::memcpy(size_data, &x_size, 2);
+    out_file.write(size_data, 2);
+    std::memcpy(size_data, &y_size, 2);
+    out_file.write(size_data, 2);
+
+    for(auto &column : log_grid.patches) {
+        for(auto &this_patch : column) {
+            char state_index_data[1];
+           
+            uint8_t state_index = static_cast<uint8_t>(this_patch.state_index % log_grid.states.size());
+ 
+            std::memcpy(state_index_data, &state_index, 1);
+
+            out_file.write(state_index_data, 1);
+        }
+    }
+    out_file.close();
+}
 
 void generate_and_run(int minimum_mov, int maximum_mov, int x_bound, int y_bound, int num_states, bool is_forward_back_allowed, bool enforce_symmetric, int num_iterations, std::string file_dir, int max_combinations, int initial_num, int batch_size, std::vector<std::vector<int>> &states) {
 
@@ -23,6 +65,8 @@ void generate_and_run(int minimum_mov, int maximum_mov, int x_bound, int y_bound
     
         assert(forward_back_sets.size() == divisor);
     }
+
+    std::cout << "max_combinations: " << max_combinations << std::endl;
 
     for(int generation_num = initial_num; generation_num < max_combinations;) {
 
@@ -45,9 +89,9 @@ void generate_and_run(int minimum_mov, int maximum_mov, int x_bound, int y_bound
             for(auto state : states[generation_num / divisor]) { //Delibrate truncation
                 Eigen::Vector2i state_vec(0, 0);
 
-                int index = is_forward_back_allowed ? forward_back_sets[generation_num % divisor][state_index] : 0;
+                int index = is_forward_back_allowed ? forward_back_sets[generation_num % divisor][state_index] : 1;
 
-                state_vec[generation_num % divisor] = state;
+                state_vec[index] = state;
             
                 grid_states.push_back(state_vec);
 
@@ -62,10 +106,14 @@ void generate_and_run(int minimum_mov, int maximum_mov, int x_bound, int y_bound
         //TODO: Optimize
         
         for(int i = 0; i < num_in_this_batch; i++) {
-            std::cout << "i: " << i << std::endl;
             for(int k = 0; k < num_iterations; k++) {
                 run_ant_main(grids[i], &all_ants[i], 1); 
             }
+        }
+        
+        for(auto &log_grid : grids) {
+            write_binary_blob(file_dir, log_grid);
+
         }
     }
 }
