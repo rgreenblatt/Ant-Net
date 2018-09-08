@@ -14,7 +14,7 @@ void display(grid::grid &squares, ant::ant_interface * ants, unsigned int num_an
 
     for(auto &column : squares.patches) {
         for(auto &this_patch : column) {
-            if(this_patch.state_index == 0) {continue;}
+            if(this_patch.state_index % squares.states.size() == 0) {continue;}
             
             glBegin(GL_QUADS);
                 

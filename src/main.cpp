@@ -16,37 +16,37 @@ void run_ant_main(grid::grid &squares, ant::ant_interface * ants, unsigned int n
 std::random_device rd;
 std::default_random_engine engine{rd()};
 
-//Actual Problem: (./bin/app 0 1000 10000) //TODO: VALIDATE
+//Actual Problem: (./bin/app 0 1000 3000) //TODO: VALIDATE
 
-//std::uniform_int_distribution<int> mov_dist(1, 4);
-//std::uniform_int_distribution<int> sign_dist(0, 1);
-//
-//int x_bound = 50;
-//int y_bound = 50;
-//
-//std::vector<Eigen::Vector2i> movement_states = {
-//    {0, mov_dist(engine) * (sign_dist(engine) * 2 - 1)},
-//    {0, mov_dist(engine) * (sign_dist(engine) * 2 - 1)},
-//    {0, mov_dist(engine) * (sign_dist(engine) * 2 - 1)},
-//    {0, mov_dist(engine) * (sign_dist(engine) * 2 - 1)},
-//    {0, mov_dist(engine) * (sign_dist(engine) * 2 - 1)},
-//    {0, mov_dist(engine) * (sign_dist(engine) * 2 - 1)},
-//};
-
-//Trivial Test: (./bin/app 0 100 2000) 
-
-std::uniform_int_distribution<int> mov_dist(1, 1);
+std::uniform_int_distribution<int> mov_dist(1, 4);
 std::uniform_int_distribution<int> sign_dist(0, 1);
 
-int x_bound = 10;
-int y_bound = 10;
+int x_bound = 25;
+int y_bound = 25;
 
 std::vector<Eigen::Vector2i> movement_states = {
     {0, mov_dist(engine) * (sign_dist(engine) * 2 - 1)},
     {0, mov_dist(engine) * (sign_dist(engine) * 2 - 1)},
     {0, mov_dist(engine) * (sign_dist(engine) * 2 - 1)},
     {0, mov_dist(engine) * (sign_dist(engine) * 2 - 1)},
+    {0, mov_dist(engine) * (sign_dist(engine) * 2 - 1)},
+    {0, mov_dist(engine) * (sign_dist(engine) * 2 - 1)},
 };
+
+//Trivial Test: (./bin/app 0 100 2000) 
+
+//std::uniform_int_distribution<int> mov_dist(1, 1);
+//std::uniform_int_distribution<int> sign_dist(0, 1);
+//
+//int x_bound = 3;
+//int y_bound = 3;
+//
+//std::vector<Eigen::Vector2i> movement_states = {
+//    {0, 1/*mov_dist(engine) * (sign_dist(engine) * 2 - 1)*/},
+//    {0, 2/*mov_dist(engine) * (sign_dist(engine) * 2 - 1)*/},
+//    {0, -1/*mov_dist(engine) * (sign_dist(engine) * 2 - 1)*/},
+//    {0, -2/*mov_dist(engine) * (sign_dist(engine) * 2 - 1)*/},
+//};
 
 std::vector<grid::state> grid_states;
 
@@ -75,6 +75,8 @@ void display_ant() {
 
     display(main_grid, ants, 1);
 
+    //std::cout << k << std::endl;
+
     std::this_thread::sleep_for(std::chrono::milliseconds(sleep_per_loop));
 }
 
@@ -102,11 +104,11 @@ int main(int argc, char** argv) {
     double saturation = 1.0;
     double value = 1.0;
 
-    for(int i = (movement_states.size() - 1); i >= 0; i--) {
-        auto this_state = movement_states[i]; 
+    //for(int i = (movement_states.size() - 1); i >= 0; i--) {
+    //    auto this_state = movement_states[i]; 
 
-        movement_states.push_back(this_state);
-    }
+    //    movement_states.push_back(this_state);
+    //}
 
     for(size_t i = 0; i < movement_states.size(); i++) {
         hsv this_hsv = {360.0 * i / ((double) movement_states.size() - 1), saturation, value};

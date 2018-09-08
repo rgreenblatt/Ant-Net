@@ -9,7 +9,6 @@ inline Eigen::Vector2d rotate_d(Eigen::Vector2d to_be_rotated, Eigen::Vector2i r
     return retval;
 }
 
-//__global__
 inline Eigen::Vector2i rotate_i(Eigen::Vector2i to_be_rotated, Eigen::Vector2i rotater) {
     Eigen::Vector2i retval(to_be_rotated[0] * rotater[0] - to_be_rotated[1] * rotater[1], to_be_rotated[0] * rotater[1] + to_be_rotated[1] * rotater[0]);
     return retval;
