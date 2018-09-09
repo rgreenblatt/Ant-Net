@@ -44,7 +44,6 @@ TEST(ant, move) {
     test_ant.move(movement);
     
     auto final_loc = test_ant.get_location(); 
-    auto final_orient = test_ant.get_orientation(); 
 
     ASSERT_EQ(expected_loc, final_loc);
 }

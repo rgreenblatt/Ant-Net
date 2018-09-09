@@ -5,6 +5,7 @@
 #include "possible_states.h"
 #include <fstream>
 #include <sstream>
+#include "cnpy.h"
 
 __device__
 Eigen::Vector2i rotate_i_gpu(Eigen::Vector2i to_be_rotated, Eigen::Vector2i rotater) {
@@ -75,14 +76,86 @@ void run_ant_gpu(Eigen::Vector2i ant_location, Eigen::Vector2i ant_orientation, 
 
 void run_ant_main(grid::grid &squares, ant::ant_interface * ants, unsigned int num_ants);
 
-void write_binary_blob(std::string file_dir, int * grid_states, Eigen::Vector2i * state_movements, int x_bound, int y_bound, int initial_grid_index, int initial_state_index, int num_states) {
+void write_npy(std::string file_dir, int * grid_states, Eigen::Vector2i * state_movements, int x_bound, int y_bound, int initial_grid_index, int initial_state_index, int num_states, std::vector<std::string> &file_names) {
+    
+    std::stringstream file_name;
+    std::stringstream ID;
+    
+    file_name << file_dir << "/";
+    ID << "ant_data";
+
+    for(int i = 0; i < num_states; i++) {
+        ID << "__" << state_movements[initial_state_index + i][0] << "_" << state_movements[initial_state_index + i][1];
+    }
+
+    file_name << ID.str() << ".npy";
+
+    unsigned int x_size = x_bound * 2 + 1;
+    unsigned int y_size = y_bound * 2 + 1; 
+
+    uint8_t * output_states = new uint8_t [x_size * y_size];
+
+    for(int i = 0; i < x_size * y_size; i++) {
+        output_states[i] = static_cast<uint8_t>(grid_states[initial_grid_index + i]);
+    }
+
+    cnpy::npy_save(file_name.str(), &output_states[0], {x_size, y_size}, "w");
+    
+    file_names.push_back(ID.str());
+}
+
+void write_npz(std::string file_dir, int * grid_states, Eigen::Vector2i * state_movements, int x_bound, int y_bound, int num_states, int num_grids) {
+    
+    std::stringstream file_name;
+    
+    file_name << file_dir << "/full_ant_data.npz";
+
+    unsigned int x_size = x_bound * 2 + 1;
+    unsigned int y_size = y_bound * 2 + 1; 
+
+    for(int k = 0; k < num_grids; k++) {
+    
+        uint8_t * output_states = new uint8_t [x_size * y_size];
+       
+        std::stringstream data_name;
+ 
+        for(int i = 0; i < num_states; i++) {
+            data_name << "__" << state_movements[k * num_states + i][0] << "_" << state_movements[k * num_states + i][1];
+        }
+
+        for(int i = 0; i < x_size * y_size; i++) {
+            output_states[i] = static_cast<uint8_t>(grid_states[k * x_size * y_size + i]);
+        }
+        
+        cnpy::npz_save(file_name.str(), data_name.str(),  &output_states[0], {x_size, y_size}, k == 0 ? "w" : "a");
+
+    }
+}
+void save_names(std::string file_name, std::vector<std::string> &names) {
+
+    std::ofstream out_file;
+
+    out_file.open(file_name, std::ios::out);
+
+    for(auto &name : names) {
+        out_file << name << std::endl;
+    } 
+
+    out_file.close();
+}
+void write_binary_blob(std::string file_dir, int * grid_states, Eigen::Vector2i * state_movements, int x_bound, int y_bound, int initial_grid_index, int initial_state_index, int num_states, int num_grids) {
     
     std::stringstream file_name;
     
     file_name << file_dir << "/generated_data";
 
-    for(int i = 0; i < num_states; i++) {
-        file_name << "__" << state_movements[initial_state_index + i][0] << "_" << state_movements[initial_state_index + i][1];
+    for(int k = 0; k < num_grids; k++) {
+        for(int i = num_states * k; i < num_states * (k + 1); i++) {
+            file_name << "__" << state_movements[initial_state_index + i][0] << "_" << state_movements[initial_state_index + i][1];
+        }
+        if(k != num_grids - 1) {
+            file_name << "_AND_";
+        }
     }
 
     file_name << ".antgen";
@@ -100,8 +173,10 @@ void write_binary_blob(std::string file_dir, int * grid_states, Eigen::Vector2i 
     out_file.write(size_data, 2);
     std::memcpy(size_data, &y_size, 2);
     out_file.write(size_data, 2);
+    std::memcpy(size_data, &num_grids, 2);
+    out_file.write(size_data, 2);
 
-    int total_grid_size = x_size * y_size;
+    int total_grid_size = x_size * y_size * num_grids;
 
     for(int i = 0; i < total_grid_size; i++) {
         char state_index_data[1];
@@ -115,7 +190,7 @@ void write_binary_blob(std::string file_dir, int * grid_states, Eigen::Vector2i 
     out_file.close();
 }
 
-void generate_and_run(int minimum_mov, int maximum_mov, int x_bound, int y_bound, int num_states, bool is_forward_back_allowed, bool enforce_symmetric, int num_iterations, std::string file_dir, int max_combinations, int initial_num, int batch_size, std::vector<std::vector<int>> &states) {
+void generate_and_run(int minimum_mov, int maximum_mov, int x_bound, int y_bound, int num_states, bool is_forward_back_allowed, bool enforce_symmetric, int num_iterations, std::string file_dir, int max_combinations, int initial_num, int batch_size, std::vector<std::vector<int>> &states, int file_output_type) {
 
     if(max_combinations < 0) {
         max_combinations = gsl_sf_pow_int((maximum_mov - minimum_mov + 1) * 2 * (is_forward_back_allowed ? 2 : 1), num_states); //Multiplied by 2 for sign bit
@@ -128,8 +203,8 @@ void generate_and_run(int minimum_mov, int maximum_mov, int x_bound, int y_bound
     std::vector<std::vector<int>> forward_back_sets;
 
     if(is_forward_back_allowed) {
-        generate_all_states(forward_back_sets, 0, 1, num_states);
-    
+        generate_all_states(forward_back_sets, 1, 1, num_states);
+   
         assert(forward_back_sets.size() == divisor);
     }
 
@@ -165,7 +240,8 @@ void generate_and_run(int minimum_mov, int maximum_mov, int x_bound, int y_bound
         for(int i = 0; i < num_in_this_batch; i++) {
             int state_index = 0;
             for(auto state : states[generation_num / divisor]) { //Delibrate truncation
-                int index = is_forward_back_allowed ? forward_back_sets[generation_num % divisor][state_index] : 1;
+                //forward_back_sets is in range -1 to 1 so we +1 and /2
+                int index = is_forward_back_allowed ? (forward_back_sets[generation_num % divisor][state_index] + 1) / 2 : 1;
             
                 state_index++;
 
@@ -205,10 +281,38 @@ void generate_and_run(int minimum_mov, int maximum_mov, int x_bound, int y_bound
         cudaFree(grid_states_gpu);
         cudaFree(state_movements_gpu);
 
-        for(int i = 0; i < num_in_this_batch; i++) {
-            write_binary_blob(file_dir, grid_states_host, state_movements_host, x_bound, y_bound, i * (x_bound * 2 + 1) * (y_bound * 2 + 1) , i * num_states, num_states);
-        }
+        //We want to write files which are just less than 4 kb for ext4
+        //6 bytes required for file identification
+        //1 byte per patch
+        //This is disabled for writing npy
+
+        int max_grid_num = (4000 - 6) / ((2 * x_bound + 1) * (2 * y_bound + 1));
         
+        std::vector<std::string> file_names;
+
+        if(file_output_type == 0) {
+            write_npz(file_dir, grid_states_host, state_movements_host, x_bound, y_bound, num_states, num_in_this_batch);
+        } else {
+            for(int i = 0; i < num_in_this_batch; ) {
+                if(file_output_type == 2) {
+                    int grid_num = num_in_this_batch - i;
+                    grid_num = grid_num > max_grid_num ? max_grid_num : grid_num;
+
+                    i += grid_num;
+
+                    write_binary_blob(file_dir, grid_states_host, state_movements_host, x_bound, y_bound, i * (x_bound * 2 + 1) * (y_bound * 2 + 1) , i * num_states, num_states, grid_num);
+                } else {
+                    write_npy(file_dir, grid_states_host, state_movements_host, x_bound, y_bound, i * (x_bound * 2 + 1) * (y_bound * 2 + 1) , i * num_states, num_states, file_names);
+                    i++;
+                }
+            }
+        
+        }
+
+        if(file_output_type == 1) {
+            save_names(file_dir + "/names.txt", file_names);
+        }
+
         delete state_movements_host; 
         delete grid_states_host;
     }
@@ -231,7 +335,8 @@ int main(int argc, char** argv) {
     std::string file_dir = "data";
     int max_combinations = -1;
     int initial_num = 0;
-    int batch_size = 8;        
+    int batch_size = 8;
+    int file_output_type = 1; //0 = npz, 1 = npy, 2 = binary blob
 
     if(argc > 4) {
         minimum_mov = std::stoi(argv[4]);
@@ -276,16 +381,20 @@ int main(int argc, char** argv) {
     if(argc > 12) {
         initial_num = std::stoi(argv[12]);
     }
+    
+    if(argc > 13) {
+        file_output_type = std::stoi(argv[13]);
+    }
 
     if(argc > 3) {
         batch_size = std::stoi(argv[3]);
     }        
 
-    std::vector<std::vector<int>>  states;
+    std::vector<std::vector<int>> states;
 
     generate_all_states(states, minimum_mov, maximum_mov, num_states);
 
-    generate_and_run(minimum_mov, maximum_mov, x_bound, y_bound, num_states, is_forward_back_allowed, enforce_symmetric, num_iterations, file_dir, max_combinations, initial_num, batch_size, states);
+    generate_and_run(minimum_mov, maximum_mov, x_bound, y_bound, num_states, is_forward_back_allowed, enforce_symmetric, num_iterations, file_dir, max_combinations, initial_num, batch_size, states, file_output_type);
    
     return 0; 
 }
