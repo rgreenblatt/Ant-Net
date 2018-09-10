@@ -18,13 +18,23 @@ std::default_random_engine engine{rd()};
 
 //Actual Problem: (./bin/app 0 1000 3000) //TODO: VALIDATE
 
-std::uniform_int_distribution<int> mov_dist(1, 4);
+std::uniform_int_distribution<int> mov_dist(1, 1);
 std::uniform_int_distribution<int> sign_dist(0, 1);
 
 int x_bound = 25;
 int y_bound = 25;
 
 std::vector<Eigen::Vector2i> movement_states = {
+    {0, mov_dist(engine) * (sign_dist(engine) * 2 - 1)},
+    {0, mov_dist(engine) * (sign_dist(engine) * 2 - 1)},
+    {0, mov_dist(engine) * (sign_dist(engine) * 2 - 1)},
+    {0, mov_dist(engine) * (sign_dist(engine) * 2 - 1)},
+    {0, mov_dist(engine) * (sign_dist(engine) * 2 - 1)},
+    {0, mov_dist(engine) * (sign_dist(engine) * 2 - 1)},
+    {0, mov_dist(engine) * (sign_dist(engine) * 2 - 1)},
+    {0, mov_dist(engine) * (sign_dist(engine) * 2 - 1)},
+    {0, mov_dist(engine) * (sign_dist(engine) * 2 - 1)},
+    {0, mov_dist(engine) * (sign_dist(engine) * 2 - 1)},
     {0, mov_dist(engine) * (sign_dist(engine) * 2 - 1)},
     {0, mov_dist(engine) * (sign_dist(engine) * 2 - 1)},
     {0, mov_dist(engine) * (sign_dist(engine) * 2 - 1)},

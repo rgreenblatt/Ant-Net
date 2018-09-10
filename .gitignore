@@ -1,3 +1,5 @@
+*.swp
+
 # Prerequisites
 *.d
 
@@ -35,6 +37,10 @@
 /bin
 /data
 /data_npy
+/data_npy*
+/data_blob
+/data_blob*
+/graph
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -1,6 +1,6 @@
 #include "possible_states.h"
 
-void generate_all_states(std::vector<std::vector<int>> &possible_states, int min, int max, unsigned int num_states) {
+void generate_all_states(std::vector<std::vector<int>> &possible_states, int min, int max, unsigned int num_states, bool neg_not_allowed) {
 
     std::vector<int> values_in_range;
 
@@ -8,8 +8,10 @@ void generate_all_states(std::vector<std::vector<int>> &possible_states, int min
         values_in_range.push_back(i);
     } 
 
-    for(int i = -min; i >= -max; i--) {
-        values_in_range.push_back(i);
+    if(!neg_not_allowed) {
+        for(int i = -min; i >= -max; i--) {
+            values_in_range.push_back(i);
+        }
     } 
     for(auto val_in_range : values_in_range) {
         std::vector<int> initial;

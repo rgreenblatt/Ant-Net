@@ -96,7 +96,7 @@ void write_npy(std::string file_dir, int * grid_states, Eigen::Vector2i * state_
     uint8_t * output_states = new uint8_t [x_size * y_size];
 
     for(int i = 0; i < x_size * y_size; i++) {
-        output_states[i] = static_cast<uint8_t>(grid_states[initial_grid_index + i]);
+        output_states[i] = static_cast<uint8_t>(grid_states[initial_grid_index + i] % num_states);
     }
 
     cnpy::npy_save(file_name.str(), &output_states[0], {x_size, y_size}, "w");
@@ -124,7 +124,7 @@ void write_npz(std::string file_dir, int * grid_states, Eigen::Vector2i * state_
         }
 
         for(int i = 0; i < x_size * y_size; i++) {
-            output_states[i] = static_cast<uint8_t>(grid_states[k * x_size * y_size + i]);
+            output_states[i] = static_cast<uint8_t>(grid_states[k * x_size * y_size + i] % num_states);
         }
         
         cnpy::npz_save(file_name.str(), data_name.str(),  &output_states[0], {x_size, y_size}, k == 0 ? "w" : "a");
@@ -190,10 +190,13 @@ void write_binary_blob(std::string file_dir, int * grid_states, Eigen::Vector2i 
     out_file.close();
 }
 
-void generate_and_run(int minimum_mov, int maximum_mov, int x_bound, int y_bound, int num_states, bool is_forward_back_allowed, bool enforce_symmetric, int num_iterations, std::string file_dir, int max_combinations, int initial_num, int batch_size, std::vector<std::vector<int>> &states, int file_output_type) {
+void generate_and_run(int minimum_mov, int maximum_mov, int x_bound, int y_bound, int num_states, bool is_forward_back_allowed, bool enforce_symmetric, int num_iterations, std::string file_dir, int max_combinations, int initial_num, int batch_size, std::vector<std::vector<int>> &states, int file_output_type, bool neg_not_allowed) {
 
-    if(max_combinations < 0) {
-        max_combinations = gsl_sf_pow_int((maximum_mov - minimum_mov + 1) * 2 * (is_forward_back_allowed ? 2 : 1), num_states); //Multiplied by 2 for sign bit
+        
+    int max_total_combinations = gsl_sf_pow_int((maximum_mov - minimum_mov + 1) * (neg_not_allowed ? 1 : 2) * (is_forward_back_allowed ? 2 : 1), num_states); //Multiplied by 2 for sign bit
+    
+    if(max_combinations < 0 || max_combinations > max_total_combinations) {
+        max_combinations = max_total_combinations;
     }
 
     assert(max_combinations >= 0); //Overflow
@@ -203,7 +206,7 @@ void generate_and_run(int minimum_mov, int maximum_mov, int x_bound, int y_bound
     std::vector<std::vector<int>> forward_back_sets;
 
     if(is_forward_back_allowed) {
-        generate_all_states(forward_back_sets, 1, 1, num_states);
+        generate_all_states(forward_back_sets, 1, 1, num_states, false);
    
         assert(forward_back_sets.size() == divisor);
     }
@@ -211,6 +214,8 @@ void generate_and_run(int minimum_mov, int maximum_mov, int x_bound, int y_bound
     std::cout << "max_combinations: " << max_combinations << std::endl;
 
     int epoch_num = 0;
+
+    std::vector<std::string> file_names;
 
     for(int generation_num = initial_num; generation_num < max_combinations;) {
 
@@ -287,8 +292,6 @@ void generate_and_run(int minimum_mov, int maximum_mov, int x_bound, int y_bound
         //This is disabled for writing npy
 
         int max_grid_num = (4000 - 6) / ((2 * x_bound + 1) * (2 * y_bound + 1));
-        
-        std::vector<std::string> file_names;
 
         if(file_output_type == 0) {
             write_npz(file_dir, grid_states_host, state_movements_host, x_bound, y_bound, num_states, num_in_this_batch);
@@ -309,12 +312,13 @@ void generate_and_run(int minimum_mov, int maximum_mov, int x_bound, int y_bound
         
         }
 
-        if(file_output_type == 1) {
-            save_names(file_dir + "/names.txt", file_names);
-        }
 
         delete state_movements_host; 
         delete grid_states_host;
+    }
+
+    if(file_output_type == 1) {
+        save_names(file_dir + "/names.txt", file_names);
     }
 }
 
@@ -337,6 +341,7 @@ int main(int argc, char** argv) {
     int initial_num = 0;
     int batch_size = 8;
     int file_output_type = 1; //0 = npz, 1 = npy, 2 = binary blob
+    bool neg_not_allowed = false;
 
     if(argc > 4) {
         minimum_mov = std::stoi(argv[4]);
@@ -386,15 +391,19 @@ int main(int argc, char** argv) {
         file_output_type = std::stoi(argv[13]);
     }
 
+    if(argc > 14) {
+        neg_not_allowed = std::stoi(argv[14]);
+    }
+
     if(argc > 3) {
         batch_size = std::stoi(argv[3]);
     }        
 
     std::vector<std::vector<int>> states;
 
-    generate_all_states(states, minimum_mov, maximum_mov, num_states);
+    generate_all_states(states, minimum_mov, maximum_mov, num_states, neg_not_allowed);
 
-    generate_and_run(minimum_mov, maximum_mov, x_bound, y_bound, num_states, is_forward_back_allowed, enforce_symmetric, num_iterations, file_dir, max_combinations, initial_num, batch_size, states, file_output_type);
+    generate_and_run(minimum_mov, maximum_mov, x_bound, y_bound, num_states, is_forward_back_allowed, enforce_symmetric, num_iterations, file_dir, max_combinations, initial_num, batch_size, states, file_output_type, neg_not_allowed);
    
     return 0; 
 }

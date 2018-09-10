@@ -2,7 +2,7 @@ import numpy as np
 import keras
 import re
 
-class DataGeneratorSymmeticAntState(keras.utils.Sequence):
+class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
     def __init__(self, list_IDs, labels, batch_size=32, dim=(32,32,32), n_channels=1, y_dim=1,
                  y_dtype=int, shuffle=True):
@@ -49,8 +49,10 @@ class DataGeneratorSymmeticAntState(keras.utils.Sequence):
         # Generate data
         for i, ID in enumerate(list_IDs_temp):
             # Store sample
-            X[i,] = np.load('data_npy/' + ID + '.npy')
 
+            loaded = np.load('data_npy/' + ID + '.npy')
+
+            X[i,] = loaded.reshape(loaded.shape[0], loaded.shape[1], 1)
             # Store class
             #y[i] = self.get_label_from_ID(labels, ID) 
             y[i] = self.labels[ID]
