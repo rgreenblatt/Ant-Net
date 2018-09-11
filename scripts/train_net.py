@@ -55,8 +55,6 @@ def VGG_19(length=6, weights_path=None):
     model.add(Dropout(0.5))
     model.add(Dense(4096, activation='linear'))
     model.add(Dropout(0.5))
-    model.add(Dense(4096, activation='linear'))
-    model.add(Dropout(0.5))
     model.add(Dense(length, activation=linear_bound_above_abs_1))
 
     #initializers.RandomNormal(mean=0.0, stddev=0.1, seed=None)
@@ -103,10 +101,7 @@ length = 6 #This is used as the labels input as that gets provides to the get_la
 y_allowed = False
 
 print("Reading in names list...")
-id_list = pd.read_csv("data_npy/names.txt").values
-dim = (25, 25)
-n_channels = 1
-y_dtype=float
+id_list = pd.read_csv("data_npy4/names.txt").values
 
 id_list_train, id_list_test = train_test_split(id_list, test_size=0.20)
 
@@ -144,7 +139,7 @@ sgd = SGD(lr=0.0001, decay=1e-6, momentum=0.9, nesterov=True)
 
 model.compile(optimizer=sgd, loss='mean_squared_error')
 
-tbCallBack = TensorBoard(log_dir='./graph', histogram_freq=1, write_graph=True, write_grads=True, batch_size=params['batch_size'], write_images=True)
+tbCallBack = TensorBoard(log_dir='./graph', write_graph=True, write_images=True)
 
 model.fit_generator(generator=training_generator,
                     validation_data=testing_generator,
@@ -156,9 +151,12 @@ model.fit_generator(generator=training_generator,
 
 model.save("models/initial.hdf5")
 
-#Long term ideas:
-#We want the last layer to be a Dense output with the same number as there are states. Activation elu.
-#we will treat each of the different states as a class and use the net as a "classifier"
+#Currently:
+#Trained nets for 1-4 x 6 and 1-5 x 6 with working etc
+#~20 epochs to overtrain 1-4 x 6 at 0.0007
+#? epochs to overtrain 1-5 x 6 at 0.0001
 
-#Short term ideas:
-#classify forward allowed vs not allowed
+#Next:
+#Increase learning rate for 1-5 x 6
+#Test wide conv kernal (perhaps 2 * max move)
+#Test perceptron style
