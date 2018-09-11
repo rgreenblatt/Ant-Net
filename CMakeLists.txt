@@ -58,5 +58,5 @@ add_executable(generated_to_pic
 
 target_link_libraries(app ${EIGEN_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} ${GLEW_LIBRARY} pthread) 
 target_link_libraries(tests ${GTEST_LIBRARIES} ${EIGEN_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} ${GLEW_LIBRARY} pthread) 
-target_link_libraries(generator ${EIGEN_LIBRARIES} ${GSL_LIBRARIES} ${CUDA_LIBRARY} cnpy z) 
+target_link_libraries(generator libgsl.a ${CUDA_LIBRARY} libcnpy.a libz.a) 
 target_link_libraries(generated_to_pic ${EIGEN_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} ${GLEW_LIBRARY} pthread) 
