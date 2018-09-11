@@ -12,6 +12,7 @@ from keras import initializers
 from keras.layers import Activation
 from keras import backend as K
 from keras.utils.generic_utils import get_custom_objects
+from keras.utils import multi_gpu_model
 
 def linear_bound_above_abs_1(x):
     return K.switch(K.less(x, 0), x - 1, x + 1)
@@ -22,22 +23,19 @@ get_custom_objects().update({'linear_bound_above_abs_1': Activation(linear_bound
 def VGG_19(length=6, weights_path=None):
     model = Sequential()
     model.add(ZeroPadding2D((1,1),input_shape=(51,51,1)))
-    model.add(Convolution2D(32, (3, 3), activation='linear'))
+    model.add(Convolution2D(32, (10, 10), activation='linear'))
     model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(32, (3, 3), activation='linear'))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
+    model.add(Convolution2D(32, (10, 10), activation='linear'))
 
     model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(64, (3, 3), activation='linear'))
+    model.add(Convolution2D(64, (10, 10), activation='linear'))
     model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(64, (3, 3), activation='linear'))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
+    model.add(Convolution2D(64, (10, 10), activation='linear'))
 
     model.add(ZeroPadding2D((1,1)))
     model.add(Convolution2D(128, (3, 3), activation='linear'))
     model.add(ZeroPadding2D((1,1)))
     model.add(Convolution2D(128, (3, 3), activation='linear'))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(ZeroPadding2D((1,1)))
     model.add(Convolution2D(256, (3, 3), activation='linear'))
@@ -101,7 +99,7 @@ length = 6 #This is used as the labels input as that gets provides to the get_la
 y_allowed = False
 
 print("Reading in names list...")
-id_list = pd.read_csv("data_npy4/names.txt").values
+id_list = pd.read_csv("data_npy/names.txt").values
 
 id_list_train, id_list_test = train_test_split(id_list, test_size=0.20)
 
@@ -121,7 +119,7 @@ for id_test in id_list_test:
 
 
 params = {'dim': (51,51),
-          'batch_size': 64,
+          'batch_size': 32,
           'n_channels': 1,
           'y_dim': length,
           'y_dtype': float,
@@ -135,18 +133,22 @@ model = VGG_19(length)
 
 #WAS 0.0007 
 #Validate?
-sgd = SGD(lr=0.0001, decay=1e-6, momentum=0.9, nesterov=True)
+sgd = SGD(lr=0.0007, decay=1e-6, momentum=0.9, nesterov=True)
 
-model.compile(optimizer=sgd, loss='mean_squared_error')
 
 tbCallBack = TensorBoard(log_dir='./graph', write_graph=True, write_images=True)
+
+model = multi_gpu_model(model, gpus=2) 
+
+model.compile(optimizer=sgd, loss='mean_squared_error')
 
 model.fit_generator(generator=training_generator,
                     validation_data=testing_generator,
                     use_multiprocessing=True,
                     workers=8,
                     epochs=50,
-                    callbacks=[tbCallBack]
+                    callbacks=[tbCallBack],
+                    verbose=2
                     )
 
 model.save("models/initial.hdf5")
