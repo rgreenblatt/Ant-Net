@@ -133,7 +133,7 @@ model = VGG_19(length)
 
 #WAS 0.0007 
 #Validate?
-sgd = SGD(lr=0.0007, decay=1e-6, momentum=0.9, nesterov=True)
+sgd = SGD(lr=0.0001, decay=1e-6, momentum=0.9, nesterov=True)
 
 
 tbCallBack = TensorBoard(log_dir='./graph', write_graph=True, write_images=True)
@@ -148,7 +148,7 @@ model.fit_generator(generator=training_generator,
                     workers=8,
                     epochs=50,
                     callbacks=[tbCallBack],
-                    verbose=2
+                    verbose=1
                     )
 
 model.save("models/initial.hdf5")
