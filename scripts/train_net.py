@@ -154,6 +154,8 @@ model.fit_generator(generator=training_generator,
                     callbacks=[tbCallBack]
                     )
 
+model.save("models/initial.hdf5")
+
 #Long term ideas:
 #We want the last layer to be a Dense output with the same number as there are states. Activation elu.
 #we will treat each of the different states as a class and use the net as a "classifier"
