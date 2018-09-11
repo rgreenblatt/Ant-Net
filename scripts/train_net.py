@@ -22,21 +22,7 @@ get_custom_objects().update({'linear_bound_above_abs_1': Activation(linear_bound
 def VGG_19(length=6, weights_path=None):
     model = Sequential()
     model.add(ZeroPadding2D((1,1),input_shape=(51,51,1)))
-    model.add(Convolution2D(32, (10, 10), activation='linear'))
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(32, (3, 3), activation='linear'))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(64, (3, 3), activation='linear'))
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(64, (3, 3), activation='linear'))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(128, (3, 3), activation='linear'))
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(128, (3, 3), activation='linear'))
+    model.add(Convolution2D(64, (10, 10), activation='linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(Flatten())
@@ -124,7 +110,7 @@ model = VGG_19(length)
 
 #WAS 0.0007 
 #Validate?
-sgd = SGD(lr=0.0003, decay=1e-6, momentum=0.9, nesterov=True)
+sgd = SGD(lr=0.0002, decay=1e-6, momentum=0.9, nesterov=True)
 
 model.compile(optimizer=sgd, loss='mean_squared_error')
 
