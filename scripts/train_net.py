@@ -116,7 +116,7 @@ sgd = SGD(lr=0.0002, decay=1e-6, momentum=0.9, nesterov=True)
 
 num_gpus = 2
 
-if len(sys.args) > 1:
+if len(sys.argv) > 1:
     num_gpus = sys.args[1]
 
 model = multi_gpu_model(model, gpus=num_gpus) 
