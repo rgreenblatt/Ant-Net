@@ -23,24 +23,27 @@ get_custom_objects().update({'linear_bound_above_abs_1': Activation(linear_bound
 def VGG_19(length=6, weights_path=None):
     model = Sequential()
     model.add(ZeroPadding2D((1,1),input_shape=(51,51,1)))
-    model.add(Convolution2D(32, (10, 10), activation='linear'))
+    model.add(Convolution2D(32, (5, 5), activation='linear'))
     model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(32, (10, 10), activation='linear'))
+    model.add(Convolution2D(32, (5, 5), activation='linear'))
 
     model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(64, (10, 10), activation='linear'))
+    model.add(Convolution2D(64, (5, 5), activation='linear'))
     model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(64, (10, 10), activation='linear'))
+    model.add(Convolution2D(64, (5, 5), activation='linear'))
+    model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(ZeroPadding2D((1,1)))
     model.add(Convolution2D(128, (3, 3), activation='linear'))
     model.add(ZeroPadding2D((1,1)))
     model.add(Convolution2D(128, (3, 3), activation='linear'))
+    model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(ZeroPadding2D((1,1)))
     model.add(Convolution2D(256, (3, 3), activation='linear'))
     model.add(ZeroPadding2D((1,1)))
     model.add(Convolution2D(256, (3, 3), activation='linear'))
+    model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(ZeroPadding2D((1,1)))
     model.add(Convolution2D(256, (3, 3), activation='linear'))
@@ -133,7 +136,7 @@ model = VGG_19(length)
 
 #WAS 0.0007 
 #Validate?
-sgd = SGD(lr=0.0007, decay=1e-6, momentum=0.9, nesterov=True)
+sgd = SGD(lr=0.0003, decay=1e-6, momentum=0.9, nesterov=True)
 
 
 tbCallBack = TensorBoard(log_dir='./graph', write_graph=True, write_images=True)
@@ -148,7 +151,7 @@ model.fit_generator(generator=training_generator,
                     workers=8,
                     epochs=50,
                     callbacks=[tbCallBack],
-                    verbose=2
+                    verbose=1
                     )
 
 model.save("models/initial.hdf5")
