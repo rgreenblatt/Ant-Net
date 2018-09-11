@@ -117,9 +117,10 @@ sgd = SGD(lr=0.0002, decay=1e-6, momentum=0.9, nesterov=True)
 num_gpus = 2
 
 if len(sys.argv) > 1:
-    num_gpus = sys.args[1]
+    num_gpus = int(sys.argv[1])
 
-model = multi_gpu_model(model, gpus=num_gpus) 
+if num_gpus > 1:
+    model = multi_gpu_model(model, gpus=num_gpus) 
 
 model.compile(optimizer=sgd, loss='mean_squared_error')
 
