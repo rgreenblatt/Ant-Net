@@ -12,6 +12,8 @@ from keras import initializers
 from keras.layers import Activation
 from keras import backend as K
 from keras.utils.generic_utils import get_custom_objects
+from keras.utils import multi_gpu_model
+import sys
 
 def linear_bound_above_abs_1(x):
     return K.switch(K.less(x, 0), x - 1, x + 1)
@@ -111,6 +113,13 @@ model = VGG_19(length)
 #WAS 0.0007 
 #Validate?
 sgd = SGD(lr=0.0002, decay=1e-6, momentum=0.9, nesterov=True)
+
+num_gpus = 2
+
+if len(sys.args) > 1:
+    num_gpus = sys.args[1]
+
+model = multi_gpu_model(model, gpus=num_gpus) 
 
 model.compile(optimizer=sgd, loss='mean_squared_error')
 
