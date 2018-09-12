@@ -13,46 +13,81 @@ from keras.layers import Activation
 from keras import backend as K
 from keras.utils.generic_utils import get_custom_objects
 from keras.utils import multi_gpu_model
+from hyperas import optim
+from hyperas.distributions import choice, uniform
 
 def linear_bound_above_abs_1(x):
     return K.switch(K.less(x, 0), x - 1, x + 1)
 
 get_custom_objects().update({'linear_bound_above_abs_1': Activation(linear_bound_above_abs_1)})
 
+length = 6 #This is used as the labels input as that gets provides to the get_label_from_ID func
+
 #https://gist.github.com/williamFalcon/b03f17991374df99ab371eaeaa7ba610
-def VGG_19(length=6, weights_path=None):
+def create_model(training_generator, testing_generator, nothing, nothing):
     model = Sequential()
     model.add(ZeroPadding2D((1,1),input_shape=(51,51,1)))
-    model.add(Convolution2D(32, (10, 10), activation='linear'))
+    model.add(Convolution2D({{choice([32, 64, 128, 256])}}, (10, 10), activation={{choice(['linear', 'sigmoid'])}}))
     model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(32, (3, 3), activation='linear'))
+    model.add(Convolution2D({{choice([32, 64, 128, 256])}}, (3, 3), activation={{choice(['linear', 'sigmoid'])}}))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(64, (3, 3), activation='linear'))
+    model.add(Convolution2D({{choice([32, 64, 128, 256])}}, (3, 3), activation={{choice(['linear', 'sigmoid'])}}))
     model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(64, (3, 3), activation='linear'))
+    model.add(Convolution2D({{choice([32, 64, 128, 256])}}, (3, 3), activation={{choice(['linear', 'sigmoid'])}}))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(128, (3, 3), activation='linear'))
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(128, (3, 3), activation='linear'))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
+    num_conv = {{choice([0, 1, 2, 3])}}
+
+    for i in range(num_conv):
+        model.add(ZeroPadding2D((1,1)))
+        model.add(Convolution2D({{choice([32, 64, 128, 256])}}, (3, 3), activation={{choice(['linear', 'sigmoid'])}}))
+        model.add(ZeroPadding2D((1,1)))
+        model.add(Convolution2D({{choice([32, 64, 128, 256])}}, (3, 3), activation={{choice(['linear', 'sigmoid'])}}))
+        model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(Flatten())
-    model.add(Dense(1024, activation='linear'))
-    model.add(Dropout(0.4))
-    model.add(Dense(1024, activation='linear'))
-    model.add(Dropout(0.4))
+
+    model.add(Dense({{choice([512, 1024, 2048])}}, activation={{choice(['linear', 'sigmoid'])}}))
+    model.add(Dropout({{uniform(0, 1)}}))
+
+    num_dense = {{choice([0, 1, 2])}}
+    
+    for i in range(num_dense):
+        model.add(Dense({{choice([512, 1024, 2048])}}, activation={{choice(['linear', 'sigmoid'])}}))
+        model.add(Dropout({{uniform(0, 1)}}))
+    
+
+
+
     model.add(Dense(length, activation=linear_bound_above_abs_1))
 
-    #initializers.RandomNormal(mean=0.0, stddev=0.1, seed=None)
+    sgd = SGD(lr=0.0003, decay=1e-6, momentum=0.9, nesterov=True)
+    
+    model = multi_gpu_model(model, gpus=2)
+    
+    model.compile(optimizer=sgd, loss='mean_squared_error')
+    
+    #tbCallBack = TensorBoard(log_dir='./graph', write_graph=True, write_images=True)
+    
+    model.fit_generator(generator=training_generator,
+                    validation_data=testing_generator,
+                    use_multiprocessing=True,
+                    workers=8,
+                    epochs=35#,
+                    #callbacks=[tbCallBack]
+                    )
 
-    if weights_path:
-        model.load_weights(weights_path)
-
-    return model
+    
+    score, acc = model.evaluate_generator(generator=training_generator,
+                    validation_data=testing_generator,
+                    use_multiprocessing=True,
+                    workers=8)
+    
+    print('Test accuracy:', acc)
+    
+    return {'loss': -acc, 'status': STATUS_OK, 'model': model}
 
 def get_label_from_ID(length, y_allowed, ID):
     parsed = ID.replace('ant_data__', '')
@@ -87,7 +122,6 @@ def get_label_from_ID(length, y_allowed, ID):
     return np.squeeze(states)
 
 
-length = 6 #This is used as the labels input as that gets provides to the get_label_from_ID func
 y_allowed = False
 
 print("Reading in names list...")
@@ -131,28 +165,11 @@ params = {'dim': (51,51),
 training_generator = DataGenerator(id_list_train, train_id_dict, data=training_data, **params)
 testing_generator = DataGenerator(id_list_test, test_id_dict, data=testing_data, **params)
 
-model = VGG_19(length)
-
+def data():
+    return training_generator, testing_generator, None, None
 
 #WAS 0.0007 
 #Validate?
-sgd = SGD(lr=0.001, decay=1e-6, momentum=0.9, nesterov=True)
-
-model = multi_gpu_model(model, gpus=2)
-
-model.compile(optimizer=sgd, loss='mean_squared_error')
-
-tbCallBack = TensorBoard(log_dir='./graph', write_graph=True, write_images=True)
-
-model.fit_generator(generator=training_generator,
-                    validation_data=testing_generator,
-                    use_multiprocessing=True,
-                    workers=8,
-                    epochs=50,
-                    callbacks=[tbCallBack]
-                    )
-
-model.save("models/initial.hdf5")
 
 #Currently:
 #Trained nets for 1-4 x 6 and 1-5 x 6 with working etc
