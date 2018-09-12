@@ -23,7 +23,7 @@ get_custom_objects().update({'linear_bound_above_abs_1': Activation(linear_bound
 def VGG_19(length=6, weights_path=None):
     model = Sequential()
     model.add(ZeroPadding2D((1,1),input_shape=(51,51,1)))
-    model.add(Convolution2D(32, (10, 10), activation='linear'))
+    model.add(Convolution2D(128, (10, 10), activation='linear'))
     model.add(ZeroPadding2D((1,1)))
     model.add(Convolution2D(32, (3, 3), activation='linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
@@ -122,7 +122,7 @@ for id_test in id_list_test:
 
 
 params = {'dim': (51,51),
-          'batch_size': 64,
+          'batch_size': 32,
           'n_channels': 1,
           'y_dim': length,
           'y_dtype': float,
@@ -136,7 +136,7 @@ model = VGG_19(length)
 
 #WAS 0.0007 
 #Validate?
-sgd = SGD(lr=0.001, decay=1e-6, momentum=0.9, nesterov=True)
+sgd = SGD(lr=0.0007, decay=1e-6, momentum=0.9, nesterov=True)
 
 model = multi_gpu_model(model, gpus=2)
 
