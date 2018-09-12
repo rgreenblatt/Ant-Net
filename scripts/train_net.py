@@ -12,6 +12,7 @@ from keras import initializers
 from keras.layers import Activation
 from keras import backend as K
 from keras.utils.generic_utils import get_custom_objects
+from keras.utils import multi_gpu_model
 
 def linear_bound_above_abs_1(x):
     return K.switch(K.less(x, 0), x - 1, x + 1)
@@ -90,7 +91,7 @@ length = 6 #This is used as the labels input as that gets provides to the get_la
 y_allowed = False
 
 print("Reading in names list...")
-id_list = pd.read_csv("data_npy4/names.txt").values
+id_list = pd.read_csv("data_npy/names.txt").values
 
 id_list_train, id_list_test = train_test_split(id_list, test_size=0.20)
 
@@ -125,6 +126,8 @@ model = VGG_19(length)
 #WAS 0.0007 
 #Validate?
 sgd = SGD(lr=0.0003, decay=1e-6, momentum=0.9, nesterov=True)
+
+model = multi_gpu_model(model, gpus=2)
 
 model.compile(optimizer=sgd, loss='mean_squared_error')
 

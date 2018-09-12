@@ -50,7 +50,7 @@ class DataGenerator(keras.utils.Sequence):
         for i, ID in enumerate(list_IDs_temp):
             # Store sample
 
-            loaded = np.load('data_npy4/' + ID + '.npy')
+            loaded = np.load('data_npy/' + ID + '.npy')
 
             X[i,] = loaded.reshape(loaded.shape[0], loaded.shape[1], 1)
             # Store class
