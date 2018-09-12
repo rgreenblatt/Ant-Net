@@ -4,12 +4,13 @@ import re
 
 class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
-    def __init__(self, list_IDs, labels, batch_size=32, dim=(32,32,32), n_channels=1, y_dim=1,
+    def __init__(self, list_IDs, labels, data={},batch_size=32, dim=(32,32,32), n_channels=1, y_dim=1,
                  y_dtype=int, shuffle=True):
         'Initialization'
         self.dim = dim
         self.batch_size = batch_size
         self.labels = labels
+        self.data = data
         self.list_IDs = list_IDs
         self.n_channels = n_channels
         self.y_dim = y_dim
@@ -50,9 +51,12 @@ class DataGenerator(keras.utils.Sequence):
         for i, ID in enumerate(list_IDs_temp):
             # Store sample
 
-            loaded = np.load('data_npy/' + ID + '.npy')
+            if ID not in self.data:
+                loaded = np.load('data_npy/' + ID + '.npy')
+                self.data[ID] = loaded.reshape(loaded.shape[0], loaded.shape[1], 1)
 
-            X[i,] = loaded.reshape(loaded.shape[0], loaded.shape[1], 1)
+            X[i,] = self.data[ID]
+
             # Store class
             #y[i] = self.get_label_from_ID(labels, ID) 
             y[i] = self.labels[ID]

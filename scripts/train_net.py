@@ -41,10 +41,10 @@ def VGG_19(length=6, weights_path=None):
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(Flatten())
-    model.add(Dense(4096, activation='linear'))
-    model.add(Dropout(0.5))
-    model.add(Dense(4096, activation='linear'))
-    model.add(Dropout(0.5))
+    model.add(Dense(1024, activation='linear'))
+    model.add(Dropout(0.4))
+    model.add(Dense(1024, activation='linear'))
+    model.add(Dropout(0.4))
     model.add(Dense(length, activation=linear_bound_above_abs_1))
 
     #initializers.RandomNormal(mean=0.0, stddev=0.1, seed=None)
@@ -98,16 +98,27 @@ id_list_train, id_list_test = train_test_split(id_list, test_size=0.20)
 id_list_train = np.squeeze(id_list_train)
 id_list_test = np.squeeze(id_list_test)
 
+training_data = {}
+testing_data =  {}
+
 train_id_dict = {}
 test_id_dict = {}
 
 print("Generating dictionary of train labels...")
+#i = 0
 for id_train in id_list_train:
     train_id_dict[id_train] = get_label_from_ID(length, y_allowed, id_train)
+    #loaded = np.load('data_npy/' + id_train + '.npy')
+    #training_data[id_train] = loaded.reshape(loaded.shape[0], loaded.shape[1], 1)
+    #i += 1
 
 print("Generating dictionary of test labels...")
+#i = 0
 for id_test in id_list_test:
     test_id_dict[id_test] = get_label_from_ID(length, y_allowed, id_test)
+    #loaded = np.load('data_npy/' + id_test + '.npy')
+    #testing_data[id_test] = loaded.reshape(loaded.shape[0], loaded.shape[1], 1)
+    #i += 1
 
 
 params = {'dim': (51,51),
@@ -117,15 +128,15 @@ params = {'dim': (51,51),
           'y_dtype': float,
           'shuffle': True}
 
-training_generator = DataGenerator(id_list_train, train_id_dict, **params)
-testing_generator = DataGenerator(id_list_test, test_id_dict, **params)
+training_generator = DataGenerator(id_list_train, train_id_dict, data=training_data, **params)
+testing_generator = DataGenerator(id_list_test, test_id_dict, data=testing_data, **params)
 
 model = VGG_19(length)
 
 
 #WAS 0.0007 
 #Validate?
-sgd = SGD(lr=0.0003, decay=1e-6, momentum=0.9, nesterov=True)
+sgd = SGD(lr=0.001, decay=1e-6, momentum=0.9, nesterov=True)
 
 model = multi_gpu_model(model, gpus=2)
 
