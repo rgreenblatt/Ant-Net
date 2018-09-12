@@ -28,7 +28,11 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     get_custom_objects().update({'linear_bound_above_abs_1': Activation(linear_bound_above_abs_1)})
     model = Sequential()
     model.add(ZeroPadding2D((1,1),input_shape=(51,51,1)))
-    model.add(Convolution2D({{choice([32, 64, 128, 256])}}, (10, 10), activation={{choice(['linear', 'sigmoid'])}}))
+    model.add(Convolution2D({{choice([
+                                      #32, 64, 
+                                      128#,
+                                      #256
+                                            ])}}, (10, 10), activation={{choice(['linear', 'sigmoid'])}}))
     model.add(ZeroPadding2D((1,1)))
     model.add(Convolution2D({{choice([32, 64, 128, 256])}}, (3, 3), activation={{choice(['linear', 'sigmoid'])}}))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
@@ -76,7 +80,7 @@ def create_model(training_generator, testing_generator, length, num_gpus):
                     validation_data=testing_generator,
                     use_multiprocessing=True,
                     workers=8,
-                    epochs=1,
+                    epochs=80,
                     callbacks=[earlyStopping]
                     )
 
