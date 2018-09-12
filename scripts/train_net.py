@@ -16,12 +16,12 @@ from keras.utils import multi_gpu_model
 from hyperopt import Trials, STATUS_OK, tpe
 from hyperas import optim
 from hyperas.distributions import choice, uniform
-
+import sys
 
 
 
 #https://gist.github.com/williamFalcon/b03f17991374df99ab371eaeaa7ba610
-def create_model(training_generator, testing_generator, length, nothing):
+def create_model(training_generator, testing_generator, length, num_gpus):
     def linear_bound_above_abs_1(x):
         return K.switch(K.less(x, 0), x - 1, x + 1)
 
@@ -59,14 +59,12 @@ def create_model(training_generator, testing_generator, length, nothing):
         model.add(Dense({{choice([512, 1024, 2048])}}, activation={{choice(['linear', 'sigmoid'])}}))
         model.add(Dropout({{uniform(0, 1)}}))
     
-
-
-
     model.add(Dense(length, activation=linear_bound_above_abs_1))
 
     sgd = SGD(lr=0.0003, decay=1e-6, momentum=0.9, nesterov=True)
     
-    model = multi_gpu_model(model, gpus=2)
+    if num_gpus > 1:
+        model = multi_gpu_model(model, gpus=num_gpus) 
     
     model.compile(optimizer=sgd, loss='mean_squared_error')
     
@@ -78,13 +76,11 @@ def create_model(training_generator, testing_generator, length, nothing):
                     validation_data=testing_generator,
                     use_multiprocessing=True,
                     workers=8,
-                    epochs=80,
+                    epochs=1,
                     callbacks=[earlyStopping]
                     )
 
-    
-    score, acc = model.evaluate_generator(generator=training_generator,
-                    validation_data=testing_generator,
+    acc = model.evaluate_generator(generator=testing_generator,
                     use_multiprocessing=True,
                     workers=8)
     
@@ -170,7 +166,13 @@ def data():
     
     training_generator = DataGenerator(id_list_train, train_id_dict, data=training_data, **params)
     testing_generator = DataGenerator(id_list_test, test_id_dict, data=testing_data, **params)
-    return training_generator, testing_generator, length, 1
+    
+    num_gpus = 2
+    
+    if len(sys.argv) > 1:
+        num_gpus = int(sys.argv[1])
+    
+    return training_generator, testing_generator, length, num_gpus
 
 if __name__ == '__main__':
     best_run, best_model = optim.minimize(model=create_model,
@@ -180,7 +182,6 @@ if __name__ == '__main__':
                                           trials=Trials())
     print("Evalutation of best performing model:")
     print(best_model.evaluate_generator(generator=training_generator,
-                    validation_data=testing_generator,
                     use_multiprocessing=True,
                     workers=8))
     print("Best performing model chosen hyper-parameters:")
