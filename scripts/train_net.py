@@ -30,8 +30,9 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     model = Sequential()
     model.add(torus_transform_layer((9,9),input_shape=(51,51,1)))
     model.add(Convolution2D({{choice([
-                                      #32, 64, 
-                                      128#,
+                                      #32, 
+                                      64#, 
+                                      #128,
                                       #256
                                             ])}}, (9, 9), activation={{choice(['sigmoid'])}}))
     model.add(torus_transform_layer((3,3)))
