@@ -29,34 +29,41 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     get_custom_objects().update({'linear_bound_above_abs_1': Activation(linear_bound_above_abs_1)})
     model = Sequential()
     model.add(torus_transform_layer((9,9),input_shape=(51,51,1)))
+    #model.add(ZeroPadding2D((1,1), input_shape=(51,51,1)))
     model.add(Convolution2D({{choice([
                                       #32, 
-                                      64#, 
+                                      32#, 
                                       #128,
                                       #256
-                                            ])}}, (9, 9), activation={{choice(['sigmoid'])}}))
-    model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D({{choice([32])}}, (3, 3), activation={{choice(['sigmoid'])}}))
+                                            ])}}, (9, 9), activation={{choice(['linear'])}}))
+    model.add(MaxPooling2D((2,2), strides=(2,2)))
+    model.add(torus_transform_layer((9,9)))
+    #model.add(ZeroPadding2D((1,1)))
+    model.add(Convolution2D({{choice([32])}}, (9, 9), activation={{choice(['linear'])}}))
+    model.add(MaxPooling2D((2,2), strides=(2,2)))
 
-    model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D({{choice([64])}}, (3, 3), activation={{choice(['sigmoid'])}}))
+    model.add(torus_transform_layer((5,5)))
+    #model.add(ZeroPadding2D((1,1)))
+    model.add(Convolution2D({{choice([64])}}, (5, 5), activation={{choice(['linear'])}}))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D({{choice([128])}}, (3, 3), activation={{choice(['sigmoid'])}}))
+    #model.add(ZeroPadding2D((1,1)))
+    model.add(Convolution2D({{choice([128])}}, (3, 3), activation={{choice(['linear'])}}))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D({{choice([128])}}, (3, 3), activation={{choice(['sigmoid'])}}))
+    #model.add(ZeroPadding2D((1,1)))
+    model.add(Convolution2D({{choice([128])}}, (3, 3), activation={{choice(['linear'])}}))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     num_conv = 0#{{choice([0, 1, 2, 3])}}
 
     for i in range(num_conv):
         model.add(ZeroPadding2D((1,1)))
-        model.add(Convolution2D({{choice([32, 64, 128, 256])}}, (3, 3), activation={{choice(['sigmoid'])}}))
+        model.add(Convolution2D({{choice([32, 64, 128, 256])}}, (3, 3), activation={{choice(['linear'])}}))
         model.add(ZeroPadding2D((1,1)))
-        model.add(Convolution2D({{choice([32, 64, 128, 256])}}, (3, 3), activation={{choice(['sigmoid'])}}))
+        model.add(Convolution2D({{choice([32, 64, 128, 256])}}, (3, 3), activation={{choice(['linear'])}}))
 
     model.add(Flatten())
 
