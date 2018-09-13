@@ -28,32 +28,26 @@ def create_model(training_generator, testing_generator, length, num_gpus):
 
     get_custom_objects().update({'linear_bound_above_abs_1': Activation(linear_bound_above_abs_1)})
     model = Sequential()
-    model.add(torus_transform_layer((9,9),input_shape=(51,51,1)))
-    #model.add(ZeroPadding2D((1,1), input_shape=(51,51,1)))
+    model.add(torus_transform_layer((21,21),input_shape=(51,51,1)))
     model.add(Convolution2D({{choice([
                                       #32, 
                                       32#, 
                                       #128,
                                       #256
-                                            ])}}, (9, 9), activation={{choice(['linear'])}}))
+                                            ])}}, (21, 21), activation={{choice(['linear'])}}))
+    model.add(torus_transform_layer((15,15)))
+    model.add(Convolution2D({{choice([32])}}, (15, 15), activation={{choice(['linear'])}}))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
+
     model.add(torus_transform_layer((9,9)))
-    #model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D({{choice([32])}}, (9, 9), activation={{choice(['linear'])}}))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-
-    model.add(torus_transform_layer((5,5)))
-    #model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D({{choice([64])}}, (5, 5), activation={{choice(['linear'])}}))
+    model.add(Convolution2D({{choice([64])}}, (9, 9), activation={{choice(['linear'])}}))
+    model.add(torus_transform_layer((3,3)))
+    model.add(Convolution2D({{choice([64])}}, (3, 3), activation={{choice(['linear'])}}))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(torus_transform_layer((3,3)))
-    #model.add(ZeroPadding2D((1,1)))
     model.add(Convolution2D({{choice([128])}}, (3, 3), activation={{choice(['linear'])}}))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-
     model.add(torus_transform_layer((3,3)))
-    #model.add(ZeroPadding2D((1,1)))
     model.add(Convolution2D({{choice([128])}}, (3, 3), activation={{choice(['linear'])}}))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
@@ -81,7 +75,7 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     
     model.add(Dense(length, activation=linear_bound_above_abs_1))
 
-    sgd = SGD(lr=0.0003, decay=1e-6, momentum=0.9, nesterov=True)
+    sgd = SGD(lr=0.0001, decay=1e-6, momentum=0.9, nesterov=True)
     
     if num_gpus > 1:
         model = multi_gpu_model(model, gpus=num_gpus) 
