@@ -35,14 +35,25 @@ def create_model(training_generator, testing_generator, length, num_gpus):
                                       #128,
                                       #256
                                             ])}}, (21, 21), activation={{choice(['linear'])}}))
-    model.add(torus_transform_layer((15,15)))
-    model.add(Convolution2D({{choice([32])}}, (15, 15), activation={{choice(['linear'])}}))
+    model.add(torus_transform_layer((21,21),input_shape=(51,51,1)))
+    model.add(Convolution2D({{choice([
+                                      #32, 
+                                      32#, 
+                                      #128,
+                                      #256
+                                            ])}}, (21, 21), activation={{choice(['linear'])}}))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
-    model.add(torus_transform_layer((9,9)))
-    model.add(Convolution2D({{choice([64])}}, (9, 9), activation={{choice(['linear'])}}))
-    model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D({{choice([64])}}, (3, 3), activation={{choice(['linear'])}}))
+    model.add(torus_transform_layer((11,11)))
+    model.add(Convolution2D({{choice([32])}}, (11, 11), activation={{choice(['linear'])}}))
+    model.add(torus_transform_layer((11,11)))
+    model.add(Convolution2D({{choice([32])}}, (11, 11), activation={{choice(['linear'])}}))
+    model.add(MaxPooling2D((2,2), strides=(2,2)))
+
+    model.add(torus_transform_layer((5,5)))
+    model.add(Convolution2D({{choice([64])}}, (5, 5), activation={{choice(['linear'])}}))
+    model.add(torus_transform_layer((5,5)))
+    model.add(Convolution2D({{choice([64])}}, (5, 5), activation={{choice(['linear'])}}))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(torus_transform_layer((3,3)))
@@ -50,6 +61,12 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     model.add(torus_transform_layer((3,3)))
     model.add(Convolution2D({{choice([128])}}, (3, 3), activation={{choice(['linear'])}}))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
+
+    #model.add(torus_transform_layer((3,3)))
+    #model.add(Convolution2D({{choice([128])}}, (3, 3), activation={{choice(['linear'])}}))
+    #model.add(torus_transform_layer((3,3)))
+    #model.add(Convolution2D({{choice([128])}}, (3, 3), activation={{choice(['linear'])}}))
+    #model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     num_conv = 0#{{choice([0, 1, 2, 3])}}
 
@@ -62,10 +79,10 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     model.add(Flatten())
 
     model.add(Dense({{choice([1024])}}, activation={{choice(['linear'])}}))
-    model.add(Dropout({{uniform(.4, .41)}}))
+    model.add(Dropout({{uniform(.6, .61)}}))
 
     model.add(Dense({{choice([1024])}}, activation={{choice(['linear'])}}))
-    model.add(Dropout({{uniform(.4, .41)}}))
+    model.add(Dropout({{uniform(.6, .61)}}))
 
     num_dense = 0#{{choice([0, 1, 2])}}
     
