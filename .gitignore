@@ -41,6 +41,7 @@
 /data_blob
 /data_blob*
 /graph
+/temp_model.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

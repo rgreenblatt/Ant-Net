@@ -17,50 +17,58 @@ from hyperopt import Trials, STATUS_OK, tpe
 from hyperas import optim
 from hyperas.distributions import choice, uniform
 import sys
-
+from torus_transform_layer import torus_transform_layer
 
 
 #https://gist.github.com/williamFalcon/b03f17991374df99ab371eaeaa7ba610
 def create_model(training_generator, testing_generator, length, num_gpus):
+
     def linear_bound_above_abs_1(x):
         return K.switch(K.less(x, 0), x - 1, x + 1)
 
     get_custom_objects().update({'linear_bound_above_abs_1': Activation(linear_bound_above_abs_1)})
     model = Sequential()
-    model.add(ZeroPadding2D((1,1),input_shape=(51,51,1)))
+    model.add(torus_transform_layer((9,9),input_shape=(51,51,1)))
     model.add(Convolution2D({{choice([
                                       #32, 64, 
                                       128#,
                                       #256
-                                            ])}}, (10, 10), activation={{choice(['linear', 'sigmoid'])}}))
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D({{choice([32, 64, 128, 256])}}, (3, 3), activation={{choice(['linear', 'sigmoid'])}}))
+                                            ])}}, (9, 9), activation={{choice(['sigmoid'])}}))
+    model.add(torus_transform_layer((3,3)))
+    model.add(Convolution2D({{choice([32])}}, (3, 3), activation={{choice(['sigmoid'])}}))
+
+    model.add(torus_transform_layer((3,3)))
+    model.add(Convolution2D({{choice([64])}}, (3, 3), activation={{choice(['sigmoid'])}}))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D({{choice([32, 64, 128, 256])}}, (3, 3), activation={{choice(['linear', 'sigmoid'])}}))
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D({{choice([32, 64, 128, 256])}}, (3, 3), activation={{choice(['linear', 'sigmoid'])}}))
+    model.add(torus_transform_layer((3,3)))
+    model.add(Convolution2D({{choice([128])}}, (3, 3), activation={{choice(['sigmoid'])}}))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
-    num_conv = {{choice([0, 1, 2, 3])}}
+    model.add(torus_transform_layer((3,3)))
+    model.add(Convolution2D({{choice([128])}}, (3, 3), activation={{choice(['sigmoid'])}}))
+    model.add(MaxPooling2D((2,2), strides=(2,2)))
+
+    num_conv = 0#{{choice([0, 1, 2, 3])}}
 
     for i in range(num_conv):
         model.add(ZeroPadding2D((1,1)))
-        model.add(Convolution2D({{choice([32, 64, 128, 256])}}, (3, 3), activation={{choice(['linear', 'sigmoid'])}}))
+        model.add(Convolution2D({{choice([32, 64, 128, 256])}}, (3, 3), activation={{choice(['sigmoid'])}}))
         model.add(ZeroPadding2D((1,1)))
-        model.add(Convolution2D({{choice([32, 64, 128, 256])}}, (3, 3), activation={{choice(['linear', 'sigmoid'])}}))
-        model.add(MaxPooling2D((2,2), strides=(2,2)))
+        model.add(Convolution2D({{choice([32, 64, 128, 256])}}, (3, 3), activation={{choice(['sigmoid'])}}))
 
     model.add(Flatten())
 
-    model.add(Dense({{choice([512, 1024, 2048])}}, activation={{choice(['linear', 'sigmoid'])}}))
-    model.add(Dropout({{uniform(0, 1)}}))
+    model.add(Dense({{choice([1024])}}, activation={{choice(['linear'])}}))
+    model.add(Dropout({{uniform(.4, .41)}}))
 
-    num_dense = {{choice([0, 1, 2])}}
+    model.add(Dense({{choice([1024])}}, activation={{choice(['linear'])}}))
+    model.add(Dropout({{uniform(.4, .41)}}))
+
+    num_dense = 0#{{choice([0, 1, 2])}}
     
     for i in range(num_dense):
-        model.add(Dense({{choice([512, 1024, 2048])}}, activation={{choice(['linear', 'sigmoid'])}}))
+        model.add(Dense({{choice([512, 1024, 2048])}}, activation={{choice(['linear'])}}))
         model.add(Dropout({{uniform(0, 1)}}))
     
     model.add(Dense(length, activation=linear_bound_above_abs_1))
@@ -162,7 +170,7 @@ def data():
     
     
     params = {'dim': (51,51),
-              'batch_size': 64,
+              'batch_size': 32,
               'n_channels': 1,
               'y_dim': length,
               'y_dtype': float,
@@ -182,7 +190,7 @@ if __name__ == '__main__':
     best_run, best_model = optim.minimize(model=create_model,
                                           data=data,
                                           algo=tpe.suggest,
-                                          max_evals=100,
+                                          max_evals=1,
                                           trials=Trials())
     print("Evalutation of best performing model:")
     print(best_model.evaluate_generator(generator=training_generator,
