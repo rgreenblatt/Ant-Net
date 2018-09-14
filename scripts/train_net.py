@@ -29,68 +29,89 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     get_custom_objects().update({'linear_bound_above_abs_1': Activation(linear_bound_above_abs_1)})
     model = Sequential()
 
-    kernal_size0 = {{choice([3, 5, 7, 9, 11])}}
+    kernel_size0 = {{choice([3, 5, 7, 9, 11])}}
 
-    model.add(torus_transform_layer((kernal_size0,kernal_size0),input_shape=(51,51,1)))
-    model.add(Convolution2D({{choice([
-                                      #32, 
-                                      32,#, 
-                                      64,
-                                      128
-                                            ])}}, (kernal_size0, kernal_size0), activation={{choice(['linear'])}}))
+    model.add(torus_transform_layer((kernel_size0,kernel_size0),input_shape=(51,51,1)))
+
+    width0 = {{choice([32, 64, 128])}}
+
+    model.add(Convolution2D(, (kernel_size0, kernel_size0), activation='linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
-    kernal_size1 = {{choice([3, 5, 7, 9])}}
+    kernel_size1 = {{choice([3, 5, 7, 9])}}
 
-    model.add(torus_transform_layer((kernal_size1, kernal_size1)))
-    model.add(Convolution2D({{choice([16, 32, 64])}}, (kernal_size1, kernal_size1), activation={{choice(['linear'])}}))
+    model.add(torus_transform_layer((kernel_size1, kernel_size1)))
+
+    width1 = {{choice([16, 32, 64])}}
+
+    model.add(Convolution2D(width1, (kernel_size1, kernel_size1), activation='linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
-    kernal_size2 = {{choice([3, 5, 7])}}
+    kernel_size2 = {{choice([3, 5])}}
 
-    model.add(torus_transform_layer((kernal_size2,kernal_size2)))
-    model.add(Convolution2D({{choice([32, 64])}}, (kernal_size2, kernal_size2), activation={{choice(['linear'])}}))
+    model.add(torus_transform_layer((kernel_size2,kernel_size2)))
+
+    width2 = {{choice([32, 64])}}
+
+    model.add(Convolution2D(width2, (kernel_size2, kernel_size2), activation='linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
-    kernal_size3 = {{choice([3, 5])}}
+    kernel_size3 = 3
 
-    model.add(torus_transform_layer((kernal_size3,kernal_size3)))
-    model.add(Convolution2D({{choice([64, 128])}}, (kernal_size3, kernal_size3), activation={{choice(['linear'])}}))
+    model.add(torus_transform_layer((kernel_size3,kernel_size3)))
+
+    width3 = {{choice([64, 128])}}
+
+    model.add(Convolution2D(width3, (kernel_size3, kernel_size3), activation='linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
-    model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D({{choice([64, 128])}}, (3, 3), activation={{choice(['linear'])}}))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-    #model.add(torus_transform_layer((3,3)))
-    #model.add(Convolution2D({{choice([128])}}, (3, 3), activation={{choice(['linear'])}}))
-    #model.add(torus_transform_layer((3,3)))
-    #model.add(Convolution2D({{choice([128])}}, (3, 3), activation={{choice(['linear'])}}))
-    #model.add(MaxPooling2D((2,2), strides=(2,2)))
+    num_conv = {{choice([0, 1])}}
 
-    num_conv = {{choice([0, 1, 2])}}
+    width4 = {{choice([64, 128])}}
+    
+    kernel_size4 = 3
 
     for i in range(num_conv):
-    	model.add(torus_transform_layer((3,3)))
-    	model.add(Convolution2D({{choice([64, 128, 256])}}, (3, 3), activation={{choice(['linear'])}}))
+    	model.add(torus_transform_layer((kernel_size4,kernel_size4)))
+    	model.add(Convolution2D(width4, (kernel_size4, kernel_size4), activation='linear'))
     	model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(Flatten())
 
-    model.add(Dense({{choice([512, 1024])}}, activation={{choice(['linear'])}}))
-    model.add(Dropout({{uniform(.5, .8)}}))
+    width5 = {{choice([512, 1024])}}
 
-    model.add(Dense({{choice([512, 1024])}}, activation={{choice(['linear'])}}))
-    model.add(Dropout({{uniform(.5, .8)}}))
+    model.add(Dense(width5, activation='linear'))
+
+    dropout0 = {{uniform(.5, .8)}}
+
+    model.add(Dropout(dropout0))
+
+
+    width6 = {{choice([512, 1024])}}
+
+    model.add(Dense(width6, activation='linear'))
+
+    dropout1 = {{uniform(.5, .8)}}
+
+    model.add(Dropout(dropout1))
 
     num_dense = {{choice([0, 1, 2])}}
+
+    width7 = {{choice([512, 1024])}}
+    
+    dropout2 = {{uniform(.5, .8)}}
     
     for i in range(num_dense):
-        model.add(Dense({{choice([512, 1024])}}, activation={{choice(['linear'])}}))
-        model.add(Dropout({{uniform(0, 1)}}))
+        model.add(Dense(width7, activation='linear'))
+        model.add(Dropout(dropout2))
     
     model.add(Dense(length, activation=linear_bound_above_abs_1))
 
-    sgd = SGD(lr={{uniform(0.0001, 0.005)}}, decay=1e-6, momentum=0.9, nesterov=True)
+    print("Model params. w0: ", width0, " w1: ", width1, " w2: ", width2, " w3: ", width3, " w4: ", width4, 
+          " w5: ", width5, " w6: ", width6, " w7: ", width7, " k0: ", kernel_size0, " k1: ", kernel_size1, " k2: ", kernel_size2, " k3: ", kernel_size3, " k4: ", kernel_size4, " num_conv: ", num_conv, " d0: ", dropout0, " d1: ", dropout1, " d2: ", dropout2)
+
+
+    sgd = SGD(lr={{uniform(0.0001, 0.0005)}}, decay=1e-6, momentum=0.9, nesterov=True)
     
     if num_gpus > 1:
         model = multi_gpu_model(model, gpus=num_gpus) 
