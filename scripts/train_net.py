@@ -28,13 +28,13 @@ def create_model(training_generator, testing_generator, length, num_gpus):
 
     get_custom_objects().update({'linear_bound_above_abs_1': Activation(linear_bound_above_abs_1)})
     model = Sequential()
-    model.add(torus_transform_layer((21,21),input_shape=(51,51,1)))
+    model.add(torus_transform_layer((11,11),input_shape=(51,51,1)))
     model.add(Convolution2D({{choice([
                                       #32, 
                                       32#, 
                                       #128,
                                       #256
-                                            ])}}, (21, 21), activation={{choice(['linear'])}}))
+                                            ])}}, (11, 11), activation={{choice(['linear'])}}))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(torus_transform_layer((3,3)))
@@ -69,10 +69,10 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     model.add(Flatten())
 
     model.add(Dense({{choice([1024])}}, activation={{choice(['linear'])}}))
-    model.add(Dropout({{uniform(.6, .61)}}))
+    model.add(Dropout({{uniform(.5, .51)}}))
 
     model.add(Dense({{choice([1024])}}, activation={{choice(['linear'])}}))
-    model.add(Dropout({{uniform(.6, .61)}}))
+    model.add(Dropout({{uniform(.5, .51)}}))
 
     num_dense = 0#{{choice([0, 1, 2])}}
     
@@ -82,7 +82,7 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     
     model.add(Dense(length, activation=linear_bound_above_abs_1))
 
-    sgd = SGD(lr=0.0001, decay=1e-6, momentum=0.9, nesterov=True)
+    sgd = SGD(lr=0.002, decay=1e-6, momentum=0.9, nesterov=True)
     
     if num_gpus > 1:
         model = multi_gpu_model(model, gpus=num_gpus) 
