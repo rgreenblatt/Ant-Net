@@ -35,33 +35,23 @@ def create_model(training_generator, testing_generator, length, num_gpus):
                                       #128,
                                       #256
                                             ])}}, (21, 21), activation={{choice(['linear'])}}))
-    model.add(torus_transform_layer((21,21),input_shape=(51,51,1)))
-    model.add(Convolution2D({{choice([
-                                      #32, 
-                                      32#, 
-                                      #128,
-                                      #256
-                                            ])}}, (21, 21), activation={{choice(['linear'])}}))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
-    model.add(torus_transform_layer((11,11)))
-    model.add(Convolution2D({{choice([32])}}, (11, 11), activation={{choice(['linear'])}}))
-    model.add(torus_transform_layer((11,11)))
-    model.add(Convolution2D({{choice([32])}}, (11, 11), activation={{choice(['linear'])}}))
+    model.add(torus_transform_layer((3,3)))
+    model.add(Convolution2D({{choice([32])}}, (3, 3), activation={{choice(['linear'])}}))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
-    model.add(torus_transform_layer((5,5)))
-    model.add(Convolution2D({{choice([64])}}, (5, 5), activation={{choice(['linear'])}}))
-    model.add(torus_transform_layer((5,5)))
-    model.add(Convolution2D({{choice([64])}}, (5, 5), activation={{choice(['linear'])}}))
+    model.add(torus_transform_layer((3,3)))
+    model.add(Convolution2D({{choice([64])}}, (3, 3), activation={{choice(['linear'])}}))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(torus_transform_layer((3,3)))
     model.add(Convolution2D({{choice([128])}}, (3, 3), activation={{choice(['linear'])}}))
+    model.add(MaxPooling2D((2,2), strides=(2,2)))
+
     model.add(torus_transform_layer((3,3)))
     model.add(Convolution2D({{choice([128])}}, (3, 3), activation={{choice(['linear'])}}))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
-
     #model.add(torus_transform_layer((3,3)))
     #model.add(Convolution2D({{choice([128])}}, (3, 3), activation={{choice(['linear'])}}))
     #model.add(torus_transform_layer((3,3)))
