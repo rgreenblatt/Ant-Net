@@ -28,29 +28,38 @@ def create_model(training_generator, testing_generator, length, num_gpus):
 
     get_custom_objects().update({'linear_bound_above_abs_1': Activation(linear_bound_above_abs_1)})
     model = Sequential()
-    model.add(torus_transform_layer((11,11),input_shape=(51,51,1)))
+
+    kernal_size0 = {{choice([3, 5, 7, 9, 11])}}
+
+    model.add(torus_transform_layer((kernal_size0,kernal_size0),input_shape=(51,51,1)))
     model.add(Convolution2D({{choice([
                                       #32, 
-                                      32#, 
-                                      #128,
-                                      #256
-                                            ])}}, (11, 11), activation={{choice(['linear'])}}))
+                                      32,#, 
+                                      64,
+                                      128
+                                            ])}}, (kernal_size0, kernal_size0), activation={{choice(['linear'])}}))
+    model.add(MaxPooling2D((2,2), strides=(2,2)))
+    
+    kernal_size1 = {{choice([3, 5, 7, 9])}}
+
+    model.add(torus_transform_layer((kernal_size1, kernal_size1)))
+    model.add(Convolution2D({{choice([16, 32, 64])}}, (kernal_size1, kernal_size1), activation={{choice(['linear'])}}))
+    model.add(MaxPooling2D((2,2), strides=(2,2)))
+    
+    kernal_size2 = {{choice([3, 5, 7])}}
+
+    model.add(torus_transform_layer((kernal_size2,kernal_size2)))
+    model.add(Convolution2D({{choice([32, 64])}}, (kernal_size2, kernal_size2), activation={{choice(['linear'])}}))
+    model.add(MaxPooling2D((2,2), strides=(2,2)))
+
+    kernal_size3 = {{choice([3, 5])}}
+
+    model.add(torus_transform_layer((kernal_size3,kernal_size3)))
+    model.add(Convolution2D({{choice([64, 128])}}, (kernal_size3, kernal_size3), activation={{choice(['linear'])}}))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D({{choice([32])}}, (3, 3), activation={{choice(['linear'])}}))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-
-    model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D({{choice([64])}}, (3, 3), activation={{choice(['linear'])}}))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-
-    model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D({{choice([128])}}, (3, 3), activation={{choice(['linear'])}}))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-
-    model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D({{choice([128])}}, (3, 3), activation={{choice(['linear'])}}))
+    model.add(Convolution2D({{choice([64, 128])}}, (3, 3), activation={{choice(['linear'])}}))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     #model.add(torus_transform_layer((3,3)))
     #model.add(Convolution2D({{choice([128])}}, (3, 3), activation={{choice(['linear'])}}))
@@ -58,31 +67,30 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     #model.add(Convolution2D({{choice([128])}}, (3, 3), activation={{choice(['linear'])}}))
     #model.add(MaxPooling2D((2,2), strides=(2,2)))
 
-    num_conv = 0#{{choice([0, 1, 2, 3])}}
+    num_conv = {{choice([0, 1, 2])}}
 
     for i in range(num_conv):
-        model.add(ZeroPadding2D((1,1)))
-        model.add(Convolution2D({{choice([32, 64, 128, 256])}}, (3, 3), activation={{choice(['linear'])}}))
-        model.add(ZeroPadding2D((1,1)))
-        model.add(Convolution2D({{choice([32, 64, 128, 256])}}, (3, 3), activation={{choice(['linear'])}}))
+    	model.add(torus_transform_layer((3,3)))
+    	model.add(Convolution2D({{choice([64, 128, 256])}}, (3, 3), activation={{choice(['linear'])}}))
+    	model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(Flatten())
 
-    model.add(Dense({{choice([1024])}}, activation={{choice(['linear'])}}))
-    model.add(Dropout({{uniform(.5, .51)}}))
+    model.add(Dense({{choice([512, 1024])}}, activation={{choice(['linear'])}}))
+    model.add(Dropout({{uniform(.5, .8)}}))
 
-    model.add(Dense({{choice([1024])}}, activation={{choice(['linear'])}}))
-    model.add(Dropout({{uniform(.5, .51)}}))
+    model.add(Dense({{choice([512, 1024])}}, activation={{choice(['linear'])}}))
+    model.add(Dropout({{uniform(.5, .8)}}))
 
-    num_dense = 0#{{choice([0, 1, 2])}}
+    num_dense = {{choice([0, 1, 2])}}
     
     for i in range(num_dense):
-        model.add(Dense({{choice([512, 1024, 2048])}}, activation={{choice(['linear'])}}))
+        model.add(Dense({{choice([512, 1024])}}, activation={{choice(['linear'])}}))
         model.add(Dropout({{uniform(0, 1)}}))
     
     model.add(Dense(length, activation=linear_bound_above_abs_1))
 
-    sgd = SGD(lr=0.002, decay=1e-6, momentum=0.9, nesterov=True)
+    sgd = SGD(lr={{uniform(0.0001, 0.005)}}, decay=1e-6, momentum=0.9, nesterov=True)
     
     if num_gpus > 1:
         model = multi_gpu_model(model, gpus=num_gpus) 
@@ -199,7 +207,7 @@ if __name__ == '__main__':
     best_run, best_model = optim.minimize(model=create_model,
                                           data=data,
                                           algo=tpe.suggest,
-                                          max_evals=1,
+                                          max_evals=100,
                                           trials=Trials())
     print("Evalutation of best performing model:")
     print(best_model.evaluate_generator(generator=training_generator,

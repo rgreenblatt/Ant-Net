@@ -1,0 +1,328 @@
+>>> Imports:
+#coding=utf-8
+
+try:
+    import numpy as np
+except:
+    pass
+
+try:
+    import re
+except:
+    pass
+
+try:
+    from sklearn.model_selection import train_test_split
+except:
+    pass
+
+try:
+    import pandas as pd
+except:
+    pass
+
+try:
+    from generator import DataGenerator
+except:
+    pass
+
+try:
+    from keras.models import Sequential
+except:
+    pass
+
+try:
+    from keras.layers.core import Flatten, Dense, Dropout
+except:
+    pass
+
+try:
+    from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D
+except:
+    pass
+
+try:
+    from keras.optimizers import SGD
+except:
+    pass
+
+try:
+    from keras.callbacks import TensorBoard, EarlyStopping
+except:
+    pass
+
+try:
+    from keras import initializers
+except:
+    pass
+
+try:
+    from keras.layers import Activation
+except:
+    pass
+
+try:
+    from keras import backend as K
+except:
+    pass
+
+try:
+    from keras.utils.generic_utils import get_custom_objects
+except:
+    pass
+
+try:
+    from keras.utils import multi_gpu_model
+except:
+    pass
+
+try:
+    from hyperopt import Trials, STATUS_OK, tpe
+except:
+    pass
+
+try:
+    from hyperas import optim
+except:
+    pass
+
+try:
+    from hyperas.distributions import choice, uniform
+except:
+    pass
+
+try:
+    import sys
+except:
+    pass
+
+try:
+    from torus_transform_layer import torus_transform_layer
+except:
+    pass
+
+>>> Hyperas search space:
+
+def get_space():
+    return {
+        'kernal_size0': hp.choice('kernal_size0', [3, 5, 7, 9, 11]),
+        'Convolution2D': hp.choice('Convolution2D', [
+                                      #32, 
+                                      32,#, 
+                                      64,
+                                      128
+                                            ]),
+        'activation': hp.choice('activation', ['linear']),
+        'kernal_size1': hp.choice('kernal_size1', [3, 5, 7, 9]),
+        'Convolution2D_1': hp.choice('Convolution2D_1', [16, 32, 64]),
+        'activation_1': hp.choice('activation_1', ['linear']),
+        'kernal_size2': hp.choice('kernal_size2', [3, 5, 7]),
+        'Convolution2D_2': hp.choice('Convolution2D_2', [32, 64]),
+        'activation_2': hp.choice('activation_2', ['linear']),
+        'kernal_size3': hp.choice('kernal_size3', [3, 5]),
+        'Convolution2D_3': hp.choice('Convolution2D_3', [64, 128]),
+        'activation_3': hp.choice('activation_3', ['linear']),
+        'Convolution2D_4': hp.choice('Convolution2D_4', [64, 128]),
+        'activation_4': hp.choice('activation_4', ['linear']),
+        'Convolution2D_5': hp.choice('Convolution2D_5', [128]),
+        'activation_5': hp.choice('activation_5', ['linear']),
+        'Convolution2D_6': hp.choice('Convolution2D_6', [128]),
+        'activation_6': hp.choice('activation_6', ['linear']),
+        'num_conv': hp.choice('num_conv', [0, 1, 2]),
+        'Convolution2D_7': hp.choice('Convolution2D_7', [64, 128, 256]),
+        'activation_7': hp.choice('activation_7', ['linear']),
+        'Dense': hp.choice('Dense', [512, 1024]),
+        'activation_8': hp.choice('activation_8', ['linear']),
+        'Dropout': hp.uniform('Dropout', .5, .8),
+        'Dense_1': hp.choice('Dense_1', [512, 1024]),
+        'activation_9': hp.choice('activation_9', ['linear']),
+        'Dropout_1': hp.uniform('Dropout_1', .5, .8),
+        'num_conv_1': hp.choice('num_conv_1', [0, 1, 2]),
+        'Dense_2': hp.choice('Dense_2', [512, 1024]),
+        'activation_10': hp.choice('activation_10', ['linear']),
+        'Dropout_2': hp.uniform('Dropout_2', 0, 1),
+        'lr': hp.uniform('lr', 0.0001, 0.005),
+    }
+
+>>> Data
+   1: 
+   2: length = 6 #This is used as the labels input as that gets provides to the get_label_from_ID func
+   3: 
+   4: def get_label_from_ID(length, y_allowed, ID):
+   5:     parsed = ID.replace('ant_data__', '')
+   6: 
+   7:     index_value = 1
+   8:     
+   9:     if y_allowed:
+  10:         index_value = 2
+  11: 
+  12:     states = np.empty((length, index_value), dtype=float)
+  13: 
+  14:     for i in range(length):
+  15:         vec_string = re.sub(r'__.*', '', parsed)
+  16: 
+  17:         first = re.sub(r'_.*', '', vec_string)
+  18: 
+  19:         if y_allowed:
+  20:             states[i][0] = int(first)
+  21: 
+  22:         first += '_'
+  23:         second = re.sub(first, '', vec_string)
+  24:         if y_allowed:
+  25:             states[i][1] = int(second)
+  26:         else:
+  27:             states[i][0] = int(second)
+  28:             
+  29: 
+  30:         if(i != length - 1):
+  31:             remove_vec = vec_string + "__"
+  32:             parsed = re.sub(remove_vec, '', parsed)
+  33: 
+  34:     return np.squeeze(states)
+  35: 
+  36: 
+  37: y_allowed = False
+  38: 
+  39: print("Reading in names list...")
+  40: id_list = pd.read_csv("data_npy/names.txt").values
+  41: 
+  42: id_list_train, id_list_test = train_test_split(id_list, test_size=0.20)
+  43: 
+  44: id_list_train = np.squeeze(id_list_train)
+  45: id_list_test = np.squeeze(id_list_test)
+  46: 
+  47: training_data = {}
+  48: testing_data =  {}
+  49: 
+  50: train_id_dict = {}
+  51: test_id_dict = {}
+  52: 
+  53: print("Generating dictionary of train labels...")
+  54: #i = 0
+  55: for id_train in id_list_train:
+  56:     train_id_dict[id_train] = get_label_from_ID(length, y_allowed, id_train)
+  57:     #loaded = np.load('data_npy/' + id_train + '.npy')
+  58:     #training_data[id_train] = loaded.reshape(loaded.shape[0], loaded.shape[1], 1)
+  59:     #i += 1
+  60: 
+  61: print("Generating dictionary of test labels...")
+  62: #i = 0
+  63: for id_test in id_list_test:
+  64:     test_id_dict[id_test] = get_label_from_ID(length, y_allowed, id_test)
+  65:     #loaded = np.load('data_npy/' + id_test + '.npy')
+  66:     #testing_data[id_test] = loaded.reshape(loaded.shape[0], loaded.shape[1], 1)
+  67:     #i += 1
+  68: 
+  69: 
+  70: params = {'dim': (51,51),
+  71:           'batch_size': 32,
+  72:           'n_channels': 1,
+  73:           'y_dim': length,
+  74:           'y_dtype': float,
+  75:           'shuffle': True}
+  76: 
+  77: training_generator = DataGenerator(id_list_train, train_id_dict, data=training_data, **params)
+  78: testing_generator = DataGenerator(id_list_test, test_id_dict, data=testing_data, **params)
+  79: 
+  80: num_gpus = 2
+  81: 
+  82: if len(sys.argv) > 1:
+  83:     num_gpus = int(sys.argv[1])
+  84: 
+  85: 
+  86: 
+  87: 
+>>> Resulting replaced keras model:
+
+   1: def keras_fmin_fnct(space):
+   2: 
+   3: 
+   4:     def linear_bound_above_abs_1(x):
+   5:         return K.switch(K.less(x, 0), x - 1, x + 1)
+   6: 
+   7:     get_custom_objects().update({'linear_bound_above_abs_1': Activation(linear_bound_above_abs_1)})
+   8:     model = Sequential()
+   9: 
+  10:     kernal_size0 = space['kernal_size0']
+  11: 
+  12:     model.add(torus_transform_layer((kernal_size0,kernal_size0),input_shape=(51,51,1)))
+  13:     model.add(Convolution2D(space['Convolution2D'], (kernal_size0, kernal_size0), activation=space['activation']))
+  14:     model.add(MaxPooling2D((2,2), strides=(2,2)))
+  15:     
+  16:     kernal_size1 = space['kernal_size1']
+  17: 
+  18:     model.add(torus_transform_layer((kernal_size1, kernal_size1)))
+  19:     model.add(Convolution2D(space['Convolution2D_1'], (kernal_size1, kernal_size1), activation=space['activation_1']))
+  20:     model.add(MaxPooling2D((2,2), strides=(2,2)))
+  21:     
+  22:     kernal_size2 = space['kernal_size2']
+  23: 
+  24:     model.add(torus_transform_layer((kernal_size2,kernal_size2)))
+  25:     model.add(Convolution2D(space['Convolution2D_2'], (kernal_size2, kernal_size2), activation=space['activation_2']))
+  26:     model.add(MaxPooling2D((2,2), strides=(2,2)))
+  27: 
+  28:     kernal_size3 = space['kernal_size3']
+  29: 
+  30:     model.add(torus_transform_layer((kernal_size3,kernal_size3)))
+  31:     model.add(Convolution2D(space['Convolution2D_3'], (kernal_size3, kernal_size3), activation=space['activation_3']))
+  32:     model.add(MaxPooling2D((2,2), strides=(2,2)))
+  33: 
+  34:     model.add(torus_transform_layer((3,3)))
+  35:     model.add(Convolution2D(space['Convolution2D_4'], (3, 3), activation=space['activation_4']))
+  36:     model.add(MaxPooling2D((2,2), strides=(2,2)))
+  37:     #model.add(torus_transform_layer((3,3)))
+  38:     #model.add(Convolution2D(space['Convolution2D_5'], (3, 3), activation=space['activation_5']))
+  39:     #model.add(torus_transform_layer((3,3)))
+  40:     #model.add(Convolution2D(space['Convolution2D_6'], (3, 3), activation=space['activation_6']))
+  41:     #model.add(MaxPooling2D((2,2), strides=(2,2)))
+  42: 
+  43:     num_conv = space['num_conv']
+  44: 
+  45:     for i in range(num_conv):
+  46:     	model.add(torus_transform_layer((3,3)))
+  47:     	model.add(Convolution2D(space['Convolution2D_7'], (3, 3), activation=space['activation_7']))
+  48:     	model.add(MaxPooling2D((2,2), strides=(2,2)))
+  49: 
+  50:     model.add(Flatten())
+  51: 
+  52:     model.add(Dense(space['Dense'], activation=space['activation_8']))
+  53:     model.add(Dropout(space['Dropout']))
+  54: 
+  55:     model.add(Dense(space['Dense_1'], activation=space['activation_9']))
+  56:     model.add(Dropout(space['Dropout_1']))
+  57: 
+  58:     num_dense = space['num_conv_1']
+  59:     
+  60:     for i in range(num_dense):
+  61:         model.add(Dense(space['Dense_2'], activation=space['activation_10']))
+  62:         model.add(Dropout(space['Dropout_2']))
+  63:     
+  64:     model.add(Dense(length, activation=linear_bound_above_abs_1))
+  65: 
+  66:     sgd = SGD(lr=space['lr'], decay=1e-6, momentum=0.9, nesterov=True)
+  67:     
+  68:     if num_gpus > 1:
+  69:         model = multi_gpu_model(model, gpus=num_gpus) 
+  70:     
+  71:     model.compile(optimizer=sgd, loss='mean_squared_error')
+  72:     
+  73:     earlyStopping=EarlyStopping(monitor='val_loss', patience=7, verbose=0, mode='auto')
+  74: 
+  75:     #tbCallBack = TensorBoard(log_dir='./graph', write_graph=True, write_images=True)
+  76:     
+  77:     model.fit_generator(generator=training_generator,
+  78:                     validation_data=testing_generator,
+  79:                     use_multiprocessing=True,
+  80:                     workers=8,
+  81:                     epochs=80,
+  82:                     callbacks=[earlyStopping]
+  83:                     )
+  84: 
+  85:     acc = model.evaluate_generator(generator=testing_generator,
+  86:                     use_multiprocessing=True,
+  87:                     workers=8)
+  88:     
+  89:     print('Test accuracy:', acc)
+  90:     
+  91:     return {'loss': -acc, 'status': STATUS_OK, 'model': model}
+  92: 
