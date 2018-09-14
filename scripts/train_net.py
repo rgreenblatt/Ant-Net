@@ -107,18 +107,23 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     
     model.add(Dense(length, activation=linear_bound_above_abs_1))
 
+    learn_r = {{uniform(0.0001, 0.0005)}}
+    momentum = {{uniform(0.1, 0.9)}}
+    decay = {{uniform(1e-10, 1e-5)}}
+
+    sgd = SGD(lr=learn_r, decay=decay, momentum=momentum, nesterov=True)
+    
     print("Model params. w0: ", width0, " w1: ", width1, " w2: ", width2, " w3: ", width3, " w4: ", width4, 
-          " w5: ", width5, " w6: ", width6, " w7: ", width7, " k0: ", kernel_size0, " k1: ", kernel_size1, " k2: ", kernel_size2, " k3: ", kernel_size3, " k4: ", kernel_size4, " num_conv: ", num_conv, " d0: ", dropout0, " d1: ", dropout1, " d2: ", dropout2)
-
-
-    sgd = SGD(lr={{uniform(0.0001, 0.0005)}}, decay=1e-6, momentum=0.9, nesterov=True)
+          " w5: ", width5, " w6: ", width6, " w7: ", width7, " k0: ", kernel_size0, " k1: ", kernel_size1, " k2: ",
+          kernel_size2, " k3: ", kernel_size3, " k4: ", kernel_size4, " num_conv: ", num_conv, " d0: ", dropout0, 
+          " d1: ", dropout1, " d2: ", dropout2, " lr: ", learn_r, " m: ", momentum, " d: ", decay)
     
     if num_gpus > 1:
         model = multi_gpu_model(model, gpus=num_gpus) 
     
     model.compile(optimizer=sgd, loss='mean_squared_error')
     
-    earlyStopping=EarlyStopping(monitor='val_loss', patience=7, verbose=0, mode='auto')
+    earlyStopping=EarlyStopping(monitor='val_loss', patience=4, verbose=0, mode='auto', min_delta=0.007)
 
     #tbCallBack = TensorBoard(log_dir='./graph', write_graph=True, write_images=True)
     
