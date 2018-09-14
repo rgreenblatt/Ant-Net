@@ -35,7 +35,7 @@ def create_model(training_generator, testing_generator, length, num_gpus):
 
     width0 = {{choice([32, 64, 128])}}
 
-    model.add(Convolution2D(, (kernel_size0, kernel_size0), activation='linear'))
+    model.add(Convolution2D(width0, (kernel_size0, kernel_size0), activation='linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
     kernel_size1 = {{choice([3, 5, 7, 9])}}
@@ -107,7 +107,7 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     
     model.add(Dense(length, activation=linear_bound_above_abs_1))
 
-    learn_r = {{uniform(0.0001, 0.0005)}}
+    learn_r = {{uniform(0.0001, 0.0003)}}
     momentum = {{uniform(0.1, 0.9)}}
     decay = {{uniform(1e-10, 1e-5)}}
 
@@ -129,14 +129,14 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     
     model.fit_generator(generator=training_generator,
                     validation_data=testing_generator,
-                    use_multiprocessing=True,
+                    use_multiprocessing=False,
                     workers=8,
                     epochs=80,
                     callbacks=[earlyStopping]
                     )
 
     acc = model.evaluate_generator(generator=testing_generator,
-                    use_multiprocessing=True,
+                    use_multiprocessing=False,
                     workers=8)
     
     print('Test accuracy:', acc)
@@ -237,7 +237,7 @@ if __name__ == '__main__':
                                           trials=Trials())
     print("Evalutation of best performing model:")
     print(best_model.evaluate_generator(generator=training_generator,
-                    use_multiprocessing=True,
+                    use_multiprocessing=False,
                     workers=8))
     print("Best performing model chosen hyper-parameters:")
     print(best_run) 
