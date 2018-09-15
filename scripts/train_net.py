@@ -29,10 +29,10 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     get_custom_objects().update({'linear_bound_above_abs_1': Activation(linear_bound_above_abs_1)})
     model = Sequential()
     model.add(torus_transform_layer((11,11),input_shape=(51,51,1)))
-    model.add(Convolution2D(128, (11, 11), activation='linear'))
+    model.add(Convolution2D(32, (11, 11), activation='linear'))
     
     model.add(torus_transform_layer((11,11)))
-    model.add(Convolution2D(128, (11, 11), activation='linear'))
+    model.add(Convolution2D(32, (11, 11), activation='linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(torus_transform_layer((5,5)))
@@ -44,11 +44,11 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
     model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D(32, (3, 3), activation='linear'))
+    model.add(Convolution2D(128, (3, 3), activation='linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
     model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D(32, (3, 3), activation='linear'))
+    model.add(Convolution2D(128, (3, 3), activation='linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(Flatten())
@@ -162,7 +162,7 @@ def data():
     
     
     params = {'dim': (51,51),
-              'batch_size': 512,
+              'batch_size': 32,
               'n_channels': 1,
               'y_dim': length,
               'y_dtype': float,
