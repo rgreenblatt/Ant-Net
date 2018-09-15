@@ -30,10 +30,13 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     model = Sequential()
     model.add(torus_transform_layer((11,11),input_shape=(51,51,1)))
     model.add(Convolution2D(128, (11, 11), activation='linear'))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
     
+    model.add(torus_transform_layer((11,11)))
+    model.add(Convolution2D(128, (11, 11), activation='linear'))
+    model.add(MaxPooling2D((2,2), strides=(2,2)))
+
     model.add(torus_transform_layer((5,5)))
-    model.add(Convolution2D(32, (5, 5), activation='linear'))
+    model.add(Convolution2D(64, (5, 5), activation='linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
     model.add(torus_transform_layer((3,3)))
@@ -41,19 +44,19 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
     model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D(128, (3, 3), activation='linear'))
+    model.add(Convolution2D(32, (3, 3), activation='linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
     model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D(128, (3, 3), activation='linear'))
+    model.add(Convolution2D(32, (3, 3), activation='linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(Flatten())
     
-    model.add(Dense(1024, activation='linear'))
+    model.add(Dense(512, activation='linear'))
     model.add(Dropout(0.5))
     
-    model.add(Dense(1024, activation='linear'))
+    model.add(Dense(512, activation='linear'))
     model.add(Dropout(0.5))
     
     model.add(Dense(length, activation=linear_bound_above_abs_1))
@@ -78,6 +81,8 @@ def create_model(training_generator, testing_generator, length, num_gpus):
                     epochs=80,
                     callbacks=[earlyStopping]
                     )
+
+    model.save('model.h5')
 
     acc = model.evaluate_generator(generator=testing_generator,
                     use_multiprocessing=False,
