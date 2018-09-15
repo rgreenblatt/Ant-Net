@@ -29,7 +29,7 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     get_custom_objects().update({'linear_bound_above_abs_1': Activation(linear_bound_above_abs_1)})
     model = Sequential()
 
-    kernel_size0 = {{choice([3, 5, 7, 9, 11])}}
+    kernel_size0 = {{choice([9, 11, 13])}}
 
     model.add(torus_transform_layer((kernel_size0,kernel_size0),input_shape=(51,51,1)))
 
@@ -38,7 +38,7 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     model.add(Convolution2D(width0, (kernel_size0, kernel_size0), activation='linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
-    kernel_size1 = {{choice([3, 5, 7, 9])}}
+    kernel_size1 = {{choice([3, 5, 7])}}
 
     model.add(torus_transform_layer((kernel_size1, kernel_size1)))
 
@@ -65,16 +65,16 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     model.add(Convolution2D(width3, (kernel_size3, kernel_size3), activation='linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
-    num_conv = {{choice([0, 1])}}
+    num_conv = 0#{{choice([0, 1])}}
 
-    width4 = {{choice([64, 128])}}
-    
-    kernel_size4 = 3
+    width4 = 0#{{choice([64, 128])}}
+    #
+    kernel_size4 = 0#3
 
-    for i in range(num_conv):
-    	model.add(torus_transform_layer((kernel_size4,kernel_size4)))
-    	model.add(Convolution2D(width4, (kernel_size4, kernel_size4), activation='linear'))
-    	model.add(MaxPooling2D((2,2), strides=(2,2)))
+    #for i in range(num_conv):
+    #	model.add(torus_transform_layer((kernel_size4,kernel_size4)))
+    #	model.add(Convolution2D(width4, (kernel_size4, kernel_size4), activation='linear'))
+    #	model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(Flatten())
 
