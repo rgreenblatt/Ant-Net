@@ -29,51 +29,32 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     get_custom_objects().update({'linear_bound_above_abs_1': Activation(linear_bound_above_abs_1)})
     model = Sequential()
     model.add(torus_transform_layer((11,11),input_shape=(51,51,1)))
-    model.add(Convolution2D(space['Convolution2D'], (11, 11), activation=space['activation']))
+    model.add(Convolution2D(128, (11, 11), activation='linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
     model.add(torus_transform_layer((5,5)))
-    model.add(Convolution2D(space['Convolution2D_1'], (5, 5), activation=space['activation_1']))
+    model.add(Convolution2D(32, (5, 5), activation='linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
     model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D(space['Convolution2D_2'], (3, 3), activation=space['activation_2']))
+    model.add(Convolution2D(64, (3, 3), activation='linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
     model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D(space['Convolution2D_3'], (3, 3), activation=space['activation_3']))
+    model.add(Convolution2D(128, (3, 3), activation='linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
     model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D(space['Convolution2D_4'], (3, 3), activation=space['activation_4']))
+    model.add(Convolution2D(128, (3, 3), activation='linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
-    #model.add(torus_transform_layer((3,3)))
-    #model.add(Convolution2D(space['Convolution2D_5'], (3, 3), activation=space['activation_5']))
-    #model.add(torus_transform_layer((3,3)))
-    #model.add(Convolution2D(space['Convolution2D_6'], (3, 3), activation=space['activation_6']))
-    #model.add(MaxPooling2D((2,2), strides=(2,2)))
-    
-    num_conv = 0#space['activation_7']
-    
-    for i in range(num_conv):
-        model.add(ZeroPadding2D((1,1)))
-        model.add(Convolution2D(space['Convolution2D_7'], (3, 3), activation=space['activation_8']))
-        model.add(ZeroPadding2D((1,1)))
-        model.add(Convolution2D(space['Convolution2D_8'], (3, 3), activation=space['activation_9']))
     
     model.add(Flatten())
     
-    model.add(Dense(space['Dense'], activation=space['activation_10']))
-    model.add(Dropout(space['Dropout']))
+    model.add(Dense(1024, activation='linear'))
+    model.add(Dropout(0.5))
     
-    model.add(Dense(space['Dense_1'], activation=space['activation_11']))
-    model.add(Dropout(space['Dropout_1']))
-    
-    num_dense = 0#space['Dropout_2']
-    
-    for i in range(num_dense):
-        model.add(Dense(space['Dense_2'], activation=space['activation_12']))
-        model.add(Dropout(space['Dropout_3']))
+    model.add(Dense(1024, activation='linear'))
+    model.add(Dropout(0.5))
     
     model.add(Dense(length, activation=linear_bound_above_abs_1))
     
