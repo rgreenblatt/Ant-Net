@@ -58,7 +58,7 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     
     model.add(Dense(length, activation=linear_bound_above_abs_1))
     
-    sgd = SGD(lr=0.002, decay=1e-6, momentum=0.9, nesterov=True)
+    sgd = SGD(lr=0.0005, decay=1e-6, momentum=0.9, nesterov=True)
 
     if num_gpus > 1:
         model = multi_gpu_model(model, gpus=num_gpus) 
