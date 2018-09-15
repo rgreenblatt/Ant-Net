@@ -42,10 +42,16 @@ def create_model(training_generator, testing_generator, length, num_gpus):
 
     model.add(torus_transform_layer((5,5)))
     model.add(Convolution2D(64, (5, 5), activation='not_quite_linear'))
+
+    model.add(torus_transform_layer((5,5)))
+    model.add(Convolution2D(64, (5, 5), activation='not_quite_linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
     model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D(64, (3, 3), activation='not_quite_linear'))
+    model.add(Convolution2D(128, (3, 3), activation='not_quite_linear'))
+
+    model.add(torus_transform_layer((3,3)))
+    model.add(Convolution2D(128, (3, 3), activation='not_quite_linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
     model.add(torus_transform_layer((3,3)))
@@ -167,7 +173,7 @@ def data():
     
     
     params = {'dim': (51,51),
-              'batch_size': 512,
+              'batch_size': 128,
               'n_channels': 1,
               'y_dim': length,
               'y_dtype': float,
