@@ -47,7 +47,7 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     model.add(torus_transform_layer((3,3)))
     model.add(Convolution2D(128, (3, 3), activation='linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
-    
+
     model.add(Flatten())
     
     model.add(Dense(1024, activation='linear'))
@@ -66,6 +66,8 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     model.compile(optimizer=sgd, loss='mean_squared_error')
     
     earlyStopping=EarlyStopping(monitor='val_loss', patience=4, verbose=0, mode='auto', min_delta=0.007)
+
+    test_val = {{choice([0])}}
 
     #tbCallBack = TensorBoard(log_dir='./graph', write_graph=True, write_images=True)
     
@@ -178,10 +180,6 @@ if __name__ == '__main__':
                                           max_evals=100,
                                           trials=Trials())
     training_generator, testing_generator, length, num_gpus = data()
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
     print("Evalutation of best performing model:")
     print(best_model.evaluate_generator(generator=training_generator,
                     use_multiprocessing=False,
