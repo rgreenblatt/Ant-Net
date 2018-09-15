@@ -61,14 +61,14 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     
     model.add(Dense(length, activation=linear_bound_above_abs_1))
     
-    sgd = SGD(lr=0.0005, decay=1e-6, momentum=0.9, nesterov=True)
+    sgd = SGD(lr=0.001, decay=1e-6, momentum=0.9, nesterov=True)
 
     if num_gpus > 1:
         model = multi_gpu_model(model, gpus=num_gpus) 
     
     model.compile(optimizer=sgd, loss='mean_squared_error')
     
-    earlyStopping=EarlyStopping(monitor='val_loss', patience=4, verbose=0, mode='auto', min_delta=0.007)
+    earlyStopping=EarlyStopping(monitor='val_loss', patience=8, verbose=0, mode='auto', min_delta=0.007)
 
     test_val = {{choice([0])}}
 
@@ -76,7 +76,7 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     
     model.fit_generator(generator=training_generator,
                     validation_data=testing_generator,
-                    use_multiprocessing=False,
+                    use_multiprocessing=True,
                     workers=8,
                     epochs=80,
                     callbacks=[earlyStopping]
@@ -85,7 +85,7 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     model.save('model.h5')
 
     acc = model.evaluate_generator(generator=testing_generator,
-                    use_multiprocessing=False,
+                    use_multiprocessing=True,
                     workers=8)
     
     print('Test accuracy:', acc)
@@ -162,7 +162,7 @@ def data():
     
     
     params = {'dim': (51,51),
-              'batch_size': 32,
+              'batch_size': 512,
               'n_channels': 1,
               'y_dim': length,
               'y_dtype': float,
@@ -187,7 +187,7 @@ if __name__ == '__main__':
     training_generator, testing_generator, length, num_gpus = data()
     print("Evalutation of best performing model:")
     print(best_model.evaluate_generator(generator=training_generator,
-                    use_multiprocessing=False,
+                    use_multiprocessing=True,
                     workers=8))
     print("Best performing model chosen hyper-parameters:")
     print(best_run) 
