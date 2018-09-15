@@ -6,13 +6,14 @@ from generator import DataGenerator
 from keras.models import Sequential
 from keras.layers.core import Flatten, Dense, Dropout
 from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D
-from keras.optimizers import SGD
+from keras.optimizers import SGD, Adagrad, Adadelta, Adam
 from keras.callbacks import TensorBoard, EarlyStopping
 from keras import initializers 
 from keras.layers import Activation
 from keras import backend as K
 from keras.utils.generic_utils import get_custom_objects
 from keras.utils import multi_gpu_model
+from keras.regularizers import l2
 from hyperopt import Trials, STATUS_OK, tpe
 from hyperas import optim
 from hyperas.distributions import choice, uniform
@@ -23,50 +24,54 @@ from torus_transform_layer import torus_transform_layer
 #https://gist.github.com/williamFalcon/b03f17991374df99ab371eaeaa7ba610
 def create_model(training_generator, testing_generator, length, num_gpus):
 
+    def not_quite_linear(x):
+        return K.tanh(x / 5.0) * 5.0
+
     def linear_bound_above_abs_1(x):
-        return K.switch(K.less(x, 0), x - 1, x + 1)
+        return K.switch(K.less(not_quite_linear(x), 0), x - 1, x + 1)
     
     get_custom_objects().update({'linear_bound_above_abs_1': Activation(linear_bound_above_abs_1)})
+    get_custom_objects().update({'not_quite_linear': Activation(not_quite_linear)})
     model = Sequential()
     model.add(torus_transform_layer((11,11),input_shape=(51,51,1)))
-    model.add(Convolution2D(32, (11, 11), activation='linear'))
+    model.add(Convolution2D(32, (11, 11), activation='not_quite_linear'))
     
     model.add(torus_transform_layer((11,11)))
-    model.add(Convolution2D(32, (11, 11), activation='linear'))
+    model.add(Convolution2D(32, (11, 11), activation='not_quite_linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(torus_transform_layer((5,5)))
-    model.add(Convolution2D(64, (5, 5), activation='linear'))
+    model.add(Convolution2D(64, (5, 5), activation='not_quite_linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
     model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D(64, (3, 3), activation='linear'))
+    model.add(Convolution2D(64, (3, 3), activation='not_quite_linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
     model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D(128, (3, 3), activation='linear'))
+    model.add(Convolution2D(128, (3, 3), activation='not_quite_linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
     model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D(128, (3, 3), activation='linear'))
+    model.add(Convolution2D(128, (3, 3), activation='not_quite_linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(Flatten())
     
-    model.add(Dense(512, activation='linear'))
+    model.add(Dense(512, activation='not_quite_linear'))
     model.add(Dropout(0.5))
     
-    model.add(Dense(512, activation='linear'))
+    model.add(Dense(512, activation='not_quite_linear'))
     model.add(Dropout(0.5))
     
     model.add(Dense(length, activation=linear_bound_above_abs_1))
     
-    sgd = SGD(lr=0.001, decay=1e-6, momentum=0.9, nesterov=True)
+    #sgd = SGD(lr=0.002, decay=1e-7, momentum=0.3, nesterov=True)
 
     if num_gpus > 1:
         model = multi_gpu_model(model, gpus=num_gpus) 
     
-    model.compile(optimizer=sgd, loss='mean_squared_error')
+    model.compile(optimizer=Adam(), loss='mean_squared_error')
     
     earlyStopping=EarlyStopping(monitor='val_loss', patience=8, verbose=0, mode='auto', min_delta=0.007)
 
@@ -162,7 +167,7 @@ def data():
     
     
     params = {'dim': (51,51),
-              'batch_size': 32,
+              'batch_size': 512,
               'n_channels': 1,
               'y_dim': length,
               'y_dtype': float,
