@@ -35,40 +35,57 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
     get_custom_objects().update({'not_quite_linear': Activation(not_quite_linear)})
     model = Sequential()
 
-    kernel_size_0 = {{choice([7, 9, 11])}}
+    kernel_size_0 = {{choice([9, 11, 13])}}
+    width_0 = {{choice([64, 128])}}
 
-    model.add(torus_transform_layer((11,11),input_shape=(51,51,1)))
-    model.add(Convolution2D(64, (11, 11), activation=not_quite_linear))
+    model.add(torus_transform_layer((kernel_size_0,kernel_size_0),input_shape=(51,51,1)))
+    model.add(Convolution2D(width_0, (kernel_size_0, kernel_size_0), activation=not_quite_linear))
     
-    kernel_size_1 = {{choice([7, 9, 11])}}
+    kernel_size_1 = {{choice([7, 9, 11, 13])}}
+    width_1 = {{choice([64, 128])}}
 
-    model.add(torus_transform_layer((11,11)))
-    model.add(Convolution2D(64, (11, 11), activation=not_quite_linear))
+    model.add(torus_transform_layer((kernel_size_1,kernel_size_1)))
+    model.add(Convolution2D(width_1, (kernel_size_1, kernel_size_1), activation=not_quite_linear))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
+    
+    kernel_size_2 = {{choice([3, 5])}}
+    width_2 = {{choice([128, 256])}}
 
-    model.add(torus_transform_layer((5,5)))
-    model.add(Convolution2D(128, (5, 5), activation=not_quite_linear))
+    model.add(torus_transform_layer((kernel_size_2,kernel_size_2)))
+    model.add(Convolution2D(width_2, (kernel_size_2, kernel_size_2), activation=not_quite_linear))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
+    
+    width_3 = {{choice([128, 256])}}
+
+    model.add(torus_transform_layer((3,3)))
+    model.add(Convolution2D(width_3, (3, 3), activation=not_quite_linear))
+    model.add(MaxPooling2D((2,2), strides=(2,2)))
+    
+    width_4 = {{choice([256, 512])}}
+
+    model.add(torus_transform_layer((3,3)))
+    model.add(Convolution2D(width_4, (3, 3), activation=not_quite_linear))
+    model.add(MaxPooling2D((2,2), strides=(2,2)))
+    
+    width_5 = {{choice([256, 512])}}
     
     model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-    
-    model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D(256, (3, 3), activation=not_quite_linear))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-    
-    model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D(256, (3, 3), activation=not_quite_linear))
+    model.add(Convolution2D(width_5, (3, 3), activation=not_quite_linear))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(Flatten())
+
+    width_6 = {{choice([256, 512, 1024])}}
+    dropout_0 = {{uniform[0.4, 0.7]}}    
+
+    model.add(Dense(width_6, activation=not_quite_linear))
+    model.add(Dropout(dropout_0))
     
-    model.add(Dense(512, activation=not_quite_linear))
-    model.add(Dropout(0.5))
-    
-    model.add(Dense(512, activation=not_quite_linear))
-    model.add(Dropout(0.5))
+    width_7 = {{choice([256, 512, 1024])}}
+    dropout_1 = {{uniform[0.4, 0.7]}}    
+
+    model.add(Dense(width_7, activation=not_quite_linear))
+    model.add(Dropout(dropout_1))
     
     model.add(Dense(length, activation=linear_bound_above_abs_1))
     
@@ -88,6 +105,10 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
     earlyStopping=EarlyStopping(monitor='val_loss', patience=8, verbose=0, mode='auto', min_delta=0.007)
 
     #tbCallBack = TensorBoard(log_dir='./graph', write_graph=True, write_images=True)
+
+    print(" k0: ", kernel_size_0, " k1: ", kernel_size_1, " k2: ", kernel_size_2, " w0: ", width_0, 
+          " w1: ", width_1,  " w2: ", width_2, " w3: ", width_3, " w4: ", width_4, " w5: ", width_5, 
+          " w6: ", width_6, " w7: ", width_7, " d0: ", dropout_0, " d1: ", dropout_1)
     
     model.fit_generator(generator=training_generator,
                     validation_data=testing_generator,
