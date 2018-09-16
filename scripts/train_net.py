@@ -24,6 +24,8 @@ from keras.models import load_model
 
 #https://gist.github.com/williamFalcon/b03f17991374df99ab371eaeaa7ba610
 def create_model(training_generator, testing_generator, length, num_gpus, weight_path, save_path):
+    
+    numpy.random.seed(seed=2642)
 
     def not_quite_linear(x):
         return K.tanh(x / 5.0) * 5.0
@@ -93,7 +95,7 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
                     validation_data=testing_generator,
                     use_multiprocessing=True,
                     workers=8,
-                    epochs=50,
+                    epochs=20,
                     callbacks=[earlyStopping]
                     )
     
@@ -120,6 +122,9 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
     return {'loss': -acc, 'status': STATUS_OK, 'model': model}
 
 def data():
+
+    numpy.random.seed(seed=263342)
+
     length = 6 #This is used as the labels input as that gets provides to the get_label_from_ID func
 
     def get_label_from_ID(length, y_allowed, ID):
