@@ -104,7 +104,7 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
     
     model.compile(optimizer=Adam(lr=0.0005, amsgrad=use_amsgrad), loss='mean_squared_error')
     
-    earlyStopping=EarlyStopping(monitor='val_loss', patience=8, verbose=0, mode='auto', min_delta=0.007)
+    earlyStoppingAdam=EarlyStopping(monitor='val_loss', patience=4, verbose=0, mode='auto', min_delta=0.007)
 
     #tbCallBack = TensorBoard(log_dir='./graph', write_graph=True, write_images=True)
 
@@ -116,23 +116,25 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
                     validation_data=testing_generator,
                     use_multiprocessing=True,
                     workers=8,
-                    epochs=20,
-                    callbacks=[earlyStopping]
+                    epochs=80,
+                    callbacks=[earlyStoppingAdam]
                     )
     
     model.save('model_initial.h5')
     
-    model.compile(optimizer=sgd, loss='mean_squared_error')
+    #model.compile(optimizer=sgd, loss='mean_squared_error')
+    
+    #earlyStoppingSGD=EarlyStopping(monitor='val_loss', patience=8, verbose=0, mode='auto', min_delta=0.002)
 
-    model.fit_generator(generator=training_generator,
-                    validation_data=testing_generator,
-                    use_multiprocessing=True,
-                    workers=8,
-                    epochs=80,
-                    callbacks=[earlyStopping]
-                    )
+    #model.fit_generator(generator=training_generator,
+    #                validation_data=testing_generator,
+    #                use_multiprocessing=True,
+    #                workers=8,
+    #                epochs=80,
+    #                callbacks=[earlyStoppingSGD]
+    #                )
 
-    model.save('model_final.h5')
+    #model.save('model_final.h5')
 
     acc = model.evaluate_generator(generator=testing_generator,
                     use_multiprocessing=True,
