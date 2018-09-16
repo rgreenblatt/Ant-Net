@@ -42,10 +42,10 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
     model.add(torus_transform_layer((15,15),input_shape=(51,51,1)))
     model.add(Convolution2D(32, (15, 15), activation=not_quite_linear))
 
-    model.add(torus_transform_layer((13,13),input_shape=(51,51,1)))
+    model.add(torus_transform_layer((13,13)))
     model.add(Convolution2D(32, (13, 13), activation=not_quite_linear))
     
-    model.add(torus_transform_layer((11,11),input_shape=(51,51,1)))
+    model.add(torus_transform_layer((11,11)))
     model.add(Convolution2D(32, (11, 11), activation=not_quite_linear))
 
     model.add(torus_transform_layer((9, 9)))
