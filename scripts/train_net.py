@@ -19,11 +19,10 @@ from hyperas import optim
 from hyperas.distributions import choice, uniform
 import sys
 from torus_transform_layer import torus_transform_layer
-from keras.models import load_model
 
 
 #https://gist.github.com/williamFalcon/b03f17991374df99ab371eaeaa7ba610
-def create_model(training_generator, testing_generator, length, num_gpus, weight_path, save_path):
+def create_model(training_generator, testing_generator, length, num_gpus):
 
     def not_quite_linear(x):
         return K.tanh(x / 5.0) * 5.0
@@ -35,47 +34,46 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
     get_custom_objects().update({'not_quite_linear': Activation(not_quite_linear)})
     model = Sequential()
     model.add(torus_transform_layer((11,11),input_shape=(51,51,1)))
-    model.add(Convolution2D(32, (11, 11), activation=not_quite_linear))
+    model.add(Convolution2D(32, (11, 11), activation='not_quite_linear'))
     
     model.add(torus_transform_layer((11,11)))
-    model.add(Convolution2D(32, (11, 11), activation=not_quite_linear))
+    model.add(Convolution2D(32, (11, 11), activation='not_quite_linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(torus_transform_layer((5,5)))
-    model.add(Convolution2D(64, (5, 5), activation=not_quite_linear))
+    model.add(Convolution2D(32, (5, 5), activation='not_quite_linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
     model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D(64, (3, 3), activation=not_quite_linear))
+    model.add(Convolution2D(32, (3, 3), activation='not_quite_linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
     model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
+    model.add(Convolution2D(64, (3, 3), activation='not_quite_linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
-    
+   
+    #Fewer layers is quite a bit worse
+ 
     model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
+    model.add(Convolution2D(64, (3, 3), activation='not_quite_linear'))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(Flatten())
     
-    model.add(Dense(512, activation=not_quite_linear))
+    model.add(Dense(512, activation='not_quite_linear'))
     model.add(Dropout(0.5))
     
-    model.add(Dense(512, activation=not_quite_linear))
+    model.add(Dense(512, activation='not_quite_linear'))
     model.add(Dropout(0.5))
     
     model.add(Dense(length, activation=linear_bound_above_abs_1))
     
-    sgd = SGD(lr=0.001, decay=1e-6, momentum=0.7, nesterov=True)
+    #sgd = SGD(lr=0.002, decay=1e-7, momentum=0.3, nesterov=True)
 
     if num_gpus > 1:
         model = multi_gpu_model(model, gpus=num_gpus) 
-
-    if save_path != None:
-        model = load_model(save_path)
     
-    model.compile(optimizer=Adam(lr=0.0005, amsgrad=True), loss='mean_squared_error')
+    model.compile(optimizer=Adam(amsgrad=True), loss='mean_squared_error')
     
     earlyStopping=EarlyStopping(monitor='val_loss', patience=8, verbose=0, mode='auto', min_delta=0.007)
 
@@ -87,23 +85,11 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
                     validation_data=testing_generator,
                     use_multiprocessing=True,
                     workers=8,
-                    epochs=50,
-                    callbacks=[earlyStopping]
-                    )
-    
-    model.save('model_initial.h5')
-    
-    model.compile(optimizer=sgd, loss='mean_squared_error')
-
-    model.fit_generator(generator=training_generator,
-                    validation_data=testing_generator,
-                    use_multiprocessing=True,
-                    workers=8,
                     epochs=80,
                     callbacks=[earlyStopping]
                     )
 
-    model.save('model_final.h5')
+    model.save('model.h5')
 
     acc = model.evaluate_generator(generator=testing_generator,
                     use_multiprocessing=True,
@@ -197,18 +183,13 @@ def data():
     if len(sys.argv) > 1:
         num_gpus = int(sys.argv[1])
     
-    save_path = None
-
-    if len(sys.argv) > 2:
-        save_path = sys.argv[2]
-    
-    return training_generator, testing_generator, length, num_gpus, save_path
+    return training_generator, testing_generator, length, num_gpus
 
 if __name__ == '__main__':
     best_run, best_model = optim.minimize(model=create_model,
                                           data=data,
                                           algo=tpe.suggest,
-                                          max_evals=1,
+                                          max_evals=100,
                                           trials=Trials())
     training_generator, testing_generator, length, num_gpus = data()
     print("Evalutation of best performing model:")
@@ -217,6 +198,8 @@ if __name__ == '__main__':
                     workers=8))
     print("Best performing model chosen hyper-parameters:")
     print(best_run) 
+
+    best_run.save('best_model.h5')
 #WAS 0.0007 
 #Validate?
 
