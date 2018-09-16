@@ -19,10 +19,11 @@ from hyperas import optim
 from hyperas.distributions import choice, uniform
 import sys
 from torus_transform_layer import torus_transform_layer
+from keras.models import load_model
 
 
 #https://gist.github.com/williamFalcon/b03f17991374df99ab371eaeaa7ba610
-def create_model(training_generator, testing_generator, length, num_gpus):
+def create_model(training_generator, testing_generator, length, num_gpus, weight_path, save_path):
 
     def not_quite_linear(x):
         return K.tanh(x / 5.0) * 5.0
@@ -71,12 +72,16 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     
     model.add(Dense(length, activation=linear_bound_above_abs_1))
     
-    #sgd = SGD(lr=0.002, decay=1e-7, momentum=0.3, nesterov=True)
+    sgd = SGD(lr=0.001, decay=1e-6, momentum=0.7, nesterov=True)
 
     if num_gpus > 1:
         model = multi_gpu_model(model, gpus=num_gpus) 
 
-    use_amsgrad = {{choice([True, False])}}
+    use_amsgrad = {{choice([True])}}
+    
+
+    if save_path != None:
+        model = load_model(save_path)
     
     model.compile(optimizer=Adam(lr=0.0005, amsgrad=use_amsgrad), loss='mean_squared_error')
     
@@ -88,11 +93,23 @@ def create_model(training_generator, testing_generator, length, num_gpus):
                     validation_data=testing_generator,
                     use_multiprocessing=True,
                     workers=8,
+                    epochs=50,
+                    callbacks=[earlyStopping]
+                    )
+    
+    model.save('model_initial.h5')
+    
+    model.compile(optimizer=sgd, loss='mean_squared_error')
+
+    model.fit_generator(generator=training_generator,
+                    validation_data=testing_generator,
+                    use_multiprocessing=True,
+                    workers=8,
                     epochs=80,
                     callbacks=[earlyStopping]
                     )
 
-    model.save('model.h5')
+    model.save('model_final.h5')
 
     acc = model.evaluate_generator(generator=testing_generator,
                     use_multiprocessing=True,
@@ -186,13 +203,18 @@ def data():
     if len(sys.argv) > 1:
         num_gpus = int(sys.argv[1])
     
-    return training_generator, testing_generator, length, num_gpus
+    save_path = None
+
+    if len(sys.argv) > 2:
+        save_path = sys.argv[2]
+    
+    return training_generator, testing_generator, length, num_gpus, save_path
 
 if __name__ == '__main__':
     best_run, best_model = optim.minimize(model=create_model,
                                           data=data,
                                           algo=tpe.suggest,
-                                          max_evals=100,
+                                          max_evals=1,
                                           trials=Trials())
     training_generator, testing_generator, length, num_gpus = data()
     print("Evalutation of best performing model:")
@@ -201,8 +223,6 @@ if __name__ == '__main__':
                     workers=8))
     print("Best performing model chosen hyper-parameters:")
     print(best_run) 
-
-    best_run.save('best_model.h5')
 #WAS 0.0007 
 #Validate?
 
