@@ -33,35 +33,40 @@ def create_model(training_generator, testing_generator, length, num_gpus):
     get_custom_objects().update({'linear_bound_above_abs_1': Activation(linear_bound_above_abs_1)})
     get_custom_objects().update({'not_quite_linear': Activation(not_quite_linear)})
     model = Sequential()
+
+    kernel_size_0 = {{choice([7, 9, 11])}}
+
     model.add(torus_transform_layer((11,11),input_shape=(51,51,1)))
-    model.add(Convolution2D(32, (11, 11), activation='not_quite_linear'))
+    model.add(Convolution2D(64, (11, 11), activation=not_quite_linear))
     
+    kernel_size_1 = {{choice([7, 9, 11])}}
+
     model.add(torus_transform_layer((11,11)))
-    model.add(Convolution2D(32, (11, 11), activation='not_quite_linear'))
+    model.add(Convolution2D(64, (11, 11), activation=not_quite_linear))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(torus_transform_layer((5,5)))
-    model.add(Convolution2D(64, (5, 5), activation='not_quite_linear'))
+    model.add(Convolution2D(128, (5, 5), activation=not_quite_linear))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
     model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D(64, (3, 3), activation='not_quite_linear'))
+    model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
     model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D(128, (3, 3), activation='not_quite_linear'))
+    model.add(Convolution2D(256, (3, 3), activation=not_quite_linear))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
     model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D(128, (3, 3), activation='not_quite_linear'))
+    model.add(Convolution2D(256, (3, 3), activation=not_quite_linear))
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(Flatten())
     
-    model.add(Dense(512, activation='not_quite_linear'))
+    model.add(Dense(512, activation=not_quite_linear))
     model.add(Dropout(0.5))
     
-    model.add(Dense(512, activation='not_quite_linear'))
+    model.add(Dense(512, activation=not_quite_linear))
     model.add(Dropout(0.5))
     
     model.add(Dense(length, activation=linear_bound_above_abs_1))
@@ -70,12 +75,12 @@ def create_model(training_generator, testing_generator, length, num_gpus):
 
     if num_gpus > 1:
         model = multi_gpu_model(model, gpus=num_gpus) 
+
+    use_amsgrad = {{choice([True, False])}}
     
-    model.compile(optimizer=Adam(), loss='mean_squared_error')
+    model.compile(optimizer=Adam(lr=0.0005, amsgrad=use_amsgrad), loss='mean_squared_error')
     
     earlyStopping=EarlyStopping(monitor='val_loss', patience=8, verbose=0, mode='auto', min_delta=0.007)
-
-    test_val = {{choice([0])}}
 
     #tbCallBack = TensorBoard(log_dir='./graph', write_graph=True, write_images=True)
     
