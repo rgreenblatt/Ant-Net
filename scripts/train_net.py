@@ -5,7 +5,7 @@ import pandas as pd
 from generator import DataGenerator
 from keras.models import Sequential
 from keras.layers.core import Flatten, Dense, Dropout
-from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D
+from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D, AveragePooling2D
 from keras.optimizers import SGD, Adagrad, Adadelta, Adam
 from keras.callbacks import TensorBoard, EarlyStopping
 from keras import initializers 
@@ -39,48 +39,55 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
 
     kernel_size_0 = {{choice([7, 9, 11])}}
 
-    model.add(torus_transform_layer((11,11),input_shape=(51,51,1)))
-    model.add(Convolution2D(64, (11, 11), activation=not_quite_linear))
-    model.add(BatchNormalization())
-    
-    kernel_size_1 = {{choice([7, 9, 11])}}
+    model.add(torus_transform_layer((15,15),input_shape=(51,51,1)))
+    model.add(Convolution2D(32, (15, 15), activation=not_quite_linear))
 
-    model.add(torus_transform_layer((11,11)))
-    model.add(Convolution2D(64, (11, 11), activation=not_quite_linear))
-    model.add(BatchNormalization())
+    model.add(torus_transform_layer((13,13),input_shape=(51,51,1)))
+    model.add(Convolution2D(32, (13, 13), activation=not_quite_linear))
+    
+    model.add(torus_transform_layer((11,11),input_shape=(51,51,1)))
+    model.add(Convolution2D(32, (11, 11), activation=not_quite_linear))
+
+    model.add(torus_transform_layer((9, 9)))
+    model.add(Convolution2D(32, (9, 9), activation=not_quite_linear))
+
     model.add(MaxPooling2D((2,2), strides=(2,2)))
+
+    model.add(torus_transform_layer((7,7)))
+    model.add(Convolution2D(32, (7, 7), activation=not_quite_linear))
 
     model.add(torus_transform_layer((5,5)))
-    model.add(Convolution2D(128, (5, 5), activation=not_quite_linear))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-    
-    model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-    
-    model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D(256, (3, 3), activation=not_quite_linear))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-    
-    model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D(256, (3, 3), activation=not_quite_linear))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
+    model.add(Convolution2D(32, (5, 5), activation=not_quite_linear))
 
+    model.add(MaxPooling2D((2,2), strides=(2,2)))
+    
+    model.add(torus_transform_layer((3,3)))
+    model.add(Convolution2D(32, (3, 3), activation=not_quite_linear))
+
+    model.add(torus_transform_layer((3,3)))
+    model.add(Convolution2D(32, (3, 3), activation=not_quite_linear))
+
+    model.add(MaxPooling2D((2,2), strides=(2,2)))
+    
+    model.add(torus_transform_layer((3,3)))
+    model.add(Convolution2D(64, (3, 3), activation=not_quite_linear))
+
+    model.add(torus_transform_layer((3,3)))
+    model.add(Convolution2D(64, (3, 3), activation=not_quite_linear))
+
+    model.add(MaxPooling2D((2,2), strides=(2,2)))
+    
     model.add(Flatten())
     
     model.add(Dense(512, activation=not_quite_linear))
     model.add(Dropout(0.5))
     
-    model.add(Dense(512, activation=not_quite_linear))
-    model.add(Dropout(0.5))
+    #model.add(Dense(512, activation=not_quite_linear))
+    #model.add(Dropout(0.5))
     
     model.add(Dense(length, activation=linear_bound_above_abs_1))
     
-    sgd = SGD(lr=0.001, decay=1e-6, momentum=0.7, nesterov=True)
+    sgd = SGD(lr=0.00005, decay=1e-6, momentum=0.7, nesterov=True)
 
     if num_gpus > 1:
         model = multi_gpu_model(model, gpus=num_gpus) 
@@ -91,7 +98,7 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
     if save_path != None:
         model = load_model(save_path)
     
-    model.compile(optimizer=Adam(lr=0.0002, amsgrad=use_amsgrad), loss='mean_squared_error')
+    model.compile(optimizer=Adam(lr=0.0001, amsgrad=use_amsgrad), loss='mean_squared_error')
     
     earlyStopping=EarlyStopping(monitor='val_loss', patience=8, verbose=0, mode='auto', min_delta=0.007)
 
@@ -101,7 +108,7 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
                     validation_data=testing_generator,
                     use_multiprocessing=True,
                     workers=8,
-                    epochs=20,
+                    epochs=30,
                     callbacks=[earlyStopping]
                     )
     
