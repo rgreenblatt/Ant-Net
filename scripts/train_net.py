@@ -78,13 +78,13 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
     model.add(Flatten())
 
     width_6 = {{choice([256, 512, 1024])}}
-    dropout_0 = {{uniform[0.4, 0.7]}}    
+    dropout_0 = {{uniform(0.4, 0.7)}}    
 
     model.add(Dense(width_6, activation=not_quite_linear))
     model.add(Dropout(dropout_0))
     
     width_7 = {{choice([256, 512, 1024])}}
-    dropout_1 = {{uniform[0.4, 0.7]}}    
+    dropout_1 = {{uniform(0.4, 0.7)}}    
 
     model.add(Dense(width_7, activation=not_quite_linear))
     model.add(Dropout(dropout_1))
@@ -102,7 +102,7 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
     if save_path != None:
         model = load_model(save_path)
     
-    model.compile(optimizer=Adam(lr=0.0005, amsgrad=use_amsgrad), loss='mean_squared_error')
+    model.compile(optimizer=Adam(lr=0.0002, amsgrad=use_amsgrad), loss='mean_squared_error')
     
     earlyStoppingAdam=EarlyStopping(monitor='val_loss', patience=4, verbose=0, mode='auto', min_delta=0.007)
 
