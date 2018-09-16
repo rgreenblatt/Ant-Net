@@ -9,7 +9,7 @@ from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2
 from keras.optimizers import SGD, Adagrad, Adadelta, Adam
 from keras.callbacks import TensorBoard, EarlyStopping
 from keras import initializers 
-from keras.layers import Activation
+from keras.layers import Activation, BatchNormalization
 from keras import backend as K
 from keras.utils.generic_utils import get_custom_objects
 from keras.utils import multi_gpu_model
@@ -41,27 +41,33 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
 
     model.add(torus_transform_layer((11,11),input_shape=(51,51,1)))
     model.add(Convolution2D(64, (11, 11), activation=not_quite_linear))
+    model.add(BatchNormalization())
     
     kernel_size_1 = {{choice([7, 9, 11])}}
 
     model.add(torus_transform_layer((11,11)))
     model.add(Convolution2D(64, (11, 11), activation=not_quite_linear))
+    model.add(BatchNormalization())
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(torus_transform_layer((5,5)))
     model.add(Convolution2D(128, (5, 5), activation=not_quite_linear))
+    model.add(BatchNormalization())
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
     model.add(torus_transform_layer((3,3)))
     model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
+    model.add(BatchNormalization())
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
     model.add(torus_transform_layer((3,3)))
     model.add(Convolution2D(256, (3, 3), activation=not_quite_linear))
+    model.add(BatchNormalization())
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
     model.add(torus_transform_layer((3,3)))
     model.add(Convolution2D(256, (3, 3), activation=not_quite_linear))
+    model.add(BatchNormalization())
     model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(Flatten())
@@ -85,7 +91,7 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
     if save_path != None:
         model = load_model(save_path)
     
-    model.compile(optimizer=Adam(lr=0.0005, amsgrad=use_amsgrad), loss='mean_squared_error')
+    model.compile(optimizer=Adam(lr=0.0002, amsgrad=use_amsgrad), loss='mean_squared_error')
     
     earlyStopping=EarlyStopping(monitor='val_loss', patience=8, verbose=0, mode='auto', min_delta=0.007)
 
