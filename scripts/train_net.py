@@ -82,8 +82,8 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
     model.add(Dense(512, activation=not_quite_linear))
     model.add(Dropout(0.5))
     
-    #model.add(Dense(512, activation=not_quite_linear))
-    #model.add(Dropout(0.5))
+    model.add(Dense(512, activation=not_quite_linear))
+    model.add(Dropout(0.5))
     
     model.add(Dense(length, activation=linear_bound_above_abs_1))
     
@@ -108,7 +108,7 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
                     validation_data=testing_generator,
                     use_multiprocessing=True,
                     workers=8,
-                    epochs=30,
+                    epochs=60,
                     callbacks=[earlyStopping]
                     )
     
