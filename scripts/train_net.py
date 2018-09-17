@@ -59,6 +59,8 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
     model.add(torus_transform_layer((5,5)))
     model.add(Convolution2D(32, (5, 5), activation=not_quite_linear))
 
+    model.add(MaxPooling2D((2,2), strides=(2,2)))
+
     model.add(torus_transform_layer((3,3)))
     model.add(Convolution2D(32, (3, 3), activation=not_quite_linear))
 
@@ -72,6 +74,8 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
 
     model.add(torus_transform_layer((3,3)))
     model.add(Convolution2D(64, (3, 3), activation=not_quite_linear))
+
+    model.add(MaxPooling2D((2,2), strides=(2,2)))
     
     model.add(torus_transform_layer((3,3)))
     model.add(Convolution2D(64, (3, 3), activation=not_quite_linear))
@@ -83,12 +87,6 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
     
     model.add(Flatten())
 
-    model.add(Dense(512, activation=not_quite_linear))
-    model.add(Dropout(0.5))
-    
-    model.add(Dense(512, activation=not_quite_linear))
-    model.add(Dropout(0.5))
-    
     model.add(Dense(length, activation=linear_bound_above_abs_1))
     
     sgd = SGD(lr=0.00005, decay=1e-6, momentum=0.7, nesterov=True)
