@@ -77,14 +77,6 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
 
     model.add(MaxPooling2D((2,2), strides=(2,2)))
     
-    model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D(64, (3, 3), activation=not_quite_linear))
-
-    model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D(64, (3, 3), activation=not_quite_linear))
-
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-    
     model.add(Flatten())
 
     model.add(Dense(length, activation=linear_bound_above_abs_1))
@@ -100,7 +92,7 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
     if save_path != None:
         model = load_model(save_path)
     
-    model.compile(optimizer=Adam(lr=0.0001, amsgrad=use_amsgrad), loss='mean_squared_error')
+    model.compile(optimizer=Adam(lr=0.001, amsgrad=use_amsgrad), loss='mean_squared_error')
     
     earlyStopping=EarlyStopping(monitor='val_loss', patience=8, verbose=0, mode='auto', min_delta=0.007)
 
