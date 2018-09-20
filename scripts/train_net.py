@@ -49,34 +49,31 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
     model.add(Convolution2D(16, (9, 9), activation=not_quite_linear))
 
     model.add(torus_transform_layer((9, 9)))
-    model.add(Convolution2D(16, (9, 9), activation=not_quite_linear))
+    model.add(Convolution2D(16, (9, 9), strides=(2, 2), activation=not_quite_linear))
 
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-
-    model.add(torus_transform_layer((7,7)))
-    model.add(Convolution2D(32, (7, 7), activation=not_quite_linear))
+    #model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(torus_transform_layer((7,7)))
     model.add(Convolution2D(32, (7, 7), activation=not_quite_linear))
 
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
+    model.add(torus_transform_layer((7,7)))
+    model.add(Convolution2D(32, (7, 7), strides=(2, 2), activation=not_quite_linear))
+    #model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(torus_transform_layer((5,5)))
     model.add(Convolution2D(32, (5, 5), activation=not_quite_linear))
 
     model.add(torus_transform_layer((5,5)))
-    model.add(Convolution2D(32, (5, 5), activation=not_quite_linear))
-
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-    
-    model.add(torus_transform_layer((3,3)))
-    model.add(Convolution2D(64, (3, 3), activation=not_quite_linear))
+    model.add(Convolution2D(32, (5, 5), strides=(2,2), activation=not_quite_linear))
+    #model.add(MaxPooling2D((2,2), strides=(2,2)))
 
     model.add(torus_transform_layer((3,3)))
     model.add(Convolution2D(64, (3, 3), activation=not_quite_linear))
 
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-    
+    model.add(torus_transform_layer((3,3)))
+    model.add(Convolution2D(64, (3, 3), strides=(2,2), activation=not_quite_linear))
+    #model.add(MaxPooling2D((2,2), strides=(2,2)))
+
     model.add(Flatten())
 
     model.add(Dense(length, activation=linear_bound_above_abs_1))
@@ -201,7 +198,7 @@ def data():
     
     
     params = {'dim': (51,51),
-              'batch_size': 512,
+              'batch_size': 16,
               'n_channels': 1,
               'y_dim': length,
               'y_dtype': float,
