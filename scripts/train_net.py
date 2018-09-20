@@ -87,6 +87,12 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
 
     model.add(Flatten())
 
+    model.add(Dense(512, activation=not_quite_linear))
+    model.add(Dropout(0.5))
+    
+    model.add(Dense(512, activation=not_quite_linear))
+    model.add(Dropout(0.5))
+
     model.add(Dense(length, activation=linear_bound_above_abs_1))
     
     sgd = SGD(lr=0.00005, decay=1e-6, momentum=0.7, nesterov=True)
@@ -100,7 +106,7 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
     if save_path != None:
         model = load_model(save_path)
     
-    model.compile(optimizer=Adam(lr=0.001, amsgrad=use_amsgrad), loss='mean_squared_error')
+    model.compile(optimizer=Adam(lr=0.0001, amsgrad=use_amsgrad), loss='mean_squared_error')
     
     earlyStopping=EarlyStopping(monitor='val_loss', patience=8, verbose=0, mode='auto', min_delta=0.007)
 
