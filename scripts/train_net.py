@@ -87,10 +87,10 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
 
     model.add(Flatten())
 
-    model.add(Dense(128, activation=not_quite_linear))
+    model.add(Dense(512, activation=not_quite_linear))
     model.add(Dropout(0.5))
 
-    model.add(Dense(128, activation=not_quite_linear))
+    model.add(Dense(512, activation=not_quite_linear))
     model.add(Dropout(0.5))
 
     model.add(Dense(length, activation=linear_bound_above_abs_1))
