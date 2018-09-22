@@ -55,6 +55,12 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
     #model.add(Convolution2D(16, (3, 3), strides=(2,2), activation=not_quite_linear))
     model.add(MaxPooling2D((3,3), strides=(2,2)))
 
+    model.add(torus_transform_layer((7,7)))
+    model.add(Convolution2D(32, (7, 7), activation=not_quite_linear))
+
+    model.add(torus_transform_layer((7,7)))
+    model.add(Convolution2D(32, (7, 7), activation=not_quite_linear))
+
     model.add(torus_transform_layer((5,5)))
     model.add(Convolution2D(32, (5, 5), activation=not_quite_linear))
 
@@ -71,9 +77,21 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
     model.add(torus_transform_layer((3,3)))
     model.add(Convolution2D(64, (3, 3), activation=not_quite_linear))
 
+    model.add(torus_transform_layer((3,3)))
+    model.add(Convolution2D(64, (3, 3), activation=not_quite_linear))
+
+    model.add(torus_transform_layer((3,3)))
+    model.add(Convolution2D(64, (3, 3), activation=not_quite_linear))
+
     model.add(torus_transform_layer((3, 3)))
     #model.add(Convolution2D(32, (3, 3), strides=(2,2), activation=not_quite_linear))
     model.add(MaxPooling2D((3,3), strides=(2,2)))
+
+    model.add(torus_transform_layer((3,3)))
+    model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
+
+    model.add(torus_transform_layer((3,3)))
+    model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
 
     model.add(torus_transform_layer((3,3)))
     model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
