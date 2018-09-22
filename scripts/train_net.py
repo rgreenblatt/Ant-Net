@@ -99,6 +99,12 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
     model.add(torus_transform_layer((3,3)))
     model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
 
+    model.add(torus_transform_layer((3,3)))
+    model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
+
+    model.add(torus_transform_layer((3,3)))
+    model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
+
     model.add(torus_transform_layer((3, 3)))
     #model.add(Convolution2D(32, (3, 3), strides=(2,2), activation=not_quite_linear))
     model.add(MaxPooling2D((3,3), strides=(2,2)))
@@ -106,10 +112,10 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
     model.add(Flatten())
 
     model.add(Dense(256, activation=not_quite_linear))
-    model.add(Dropout(0.3))
+    model.add(Dropout(0.5))
 
     model.add(Dense(256, activation=not_quite_linear))
-    model.add(Dropout(0.3))
+    model.add(Dropout(0.5))
 
     model.add(Dense(length, activation=linear_bound_above_abs_1))
     
