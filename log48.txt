@@ -1,0 +1,375 @@
+>>> Imports:
+#coding=utf-8
+
+try:
+    import numpy as np
+except:
+    pass
+
+try:
+    import re
+except:
+    pass
+
+try:
+    from sklearn.model_selection import train_test_split
+except:
+    pass
+
+try:
+    import pandas as pd
+except:
+    pass
+
+try:
+    from generator import DataGenerator
+except:
+    pass
+
+try:
+    from keras.models import Sequential
+except:
+    pass
+
+try:
+    from keras.layers.core import Flatten, Dense, Dropout
+except:
+    pass
+
+try:
+    from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D, AveragePooling2D
+except:
+    pass
+
+try:
+    from keras.optimizers import SGD, Adagrad, Adadelta, Adam
+except:
+    pass
+
+try:
+    from keras.callbacks import TensorBoard, EarlyStopping
+except:
+    pass
+
+try:
+    from keras import initializers
+except:
+    pass
+
+try:
+    from keras.layers import Activation, BatchNormalization
+except:
+    pass
+
+try:
+    from keras import backend as K
+except:
+    pass
+
+try:
+    from keras.utils.generic_utils import get_custom_objects
+except:
+    pass
+
+try:
+    from keras.utils import multi_gpu_model
+except:
+    pass
+
+try:
+    from keras.regularizers import l2
+except:
+    pass
+
+try:
+    from hyperopt import Trials, STATUS_OK, tpe
+except:
+    pass
+
+try:
+    from hyperas import optim
+except:
+    pass
+
+try:
+    from hyperas.distributions import choice, uniform
+except:
+    pass
+
+try:
+    import sys
+except:
+    pass
+
+try:
+    from torus_transform_layer import torus_transform_layer
+except:
+    pass
+
+try:
+    from keras.models import load_model
+except:
+    pass
+
+>>> Hyperas search space:
+
+def get_space():
+    return {
+        'kernel_size_0': hp.choice('kernel_size_0', [7, 9, 11]),
+        'use_amsgrad': hp.choice('use_amsgrad', [True]),
+    }
+
+>>> Data
+   1: 
+   2: 
+   3: np.random.seed(seed=263342)
+   4: 
+   5: length = 6 #This is used as the labels input as that gets provides to the get_label_from_ID func
+   6: 
+   7: def get_label_from_ID(length, y_allowed, ID):
+   8:     parsed = ID.replace('ant_data__', '')
+   9: 
+  10:     index_value = 1
+  11:     
+  12:     if y_allowed:
+  13:         index_value = 2
+  14: 
+  15:     states = np.empty((length, index_value), dtype=float)
+  16: 
+  17:     for i in range(length):
+  18:         vec_string = re.sub(r'__.*', '', parsed)
+  19: 
+  20:         first = re.sub(r'_.*', '', vec_string)
+  21: 
+  22:         if y_allowed:
+  23:             states[i][0] = int(first)
+  24: 
+  25:         first += '_'
+  26:         second = re.sub(first, '', vec_string)
+  27:         if y_allowed:
+  28:             states[i][1] = int(second)
+  29:         else:
+  30:             states[i][0] = int(second)
+  31:             
+  32: 
+  33:         if(i != length - 1):
+  34:             remove_vec = vec_string + "__"
+  35:             parsed = re.sub(remove_vec, '', parsed)
+  36: 
+  37:     return np.squeeze(states)
+  38: 
+  39: 
+  40: y_allowed = False
+  41: 
+  42: print("Reading in names list...")
+  43: id_list = pd.read_csv("data_npy/names.txt").values
+  44: 
+  45: id_list_train, id_list_test = train_test_split(id_list, test_size=0.20)
+  46: 
+  47: id_list_train = np.squeeze(id_list_train)
+  48: id_list_test = np.squeeze(id_list_test)
+  49: 
+  50: training_data = {}
+  51: testing_data =  {}
+  52: 
+  53: train_id_dict = {}
+  54: test_id_dict = {}
+  55: 
+  56: print("Generating dictionary of train labels...")
+  57: #i = 0
+  58: for id_train in id_list_train:
+  59:     train_id_dict[id_train] = get_label_from_ID(length, y_allowed, id_train)
+  60:     #loaded = np.load('data_npy/' + id_train + '.npy')
+  61:     #training_data[id_train] = loaded.reshape(loaded.shape[0], loaded.shape[1], 1)
+  62:     #i += 1
+  63: 
+  64: print("Generating dictionary of test labels...")
+  65: #i = 0
+  66: for id_test in id_list_test:
+  67:     test_id_dict[id_test] = get_label_from_ID(length, y_allowed, id_test)
+  68:     #loaded = np.load('data_npy/' + id_test + '.npy')
+  69:     #testing_data[id_test] = loaded.reshape(loaded.shape[0], loaded.shape[1], 1)
+  70:     #i += 1
+  71: 
+  72: 
+  73: params = {'dim': (51,51),
+  74:           'batch_size': 256,
+  75:           'n_channels': 1,
+  76:           'y_dim': length,
+  77:           'y_dtype': float,
+  78:           'shuffle': True}
+  79: 
+  80: training_generator = DataGenerator(id_list_train, train_id_dict, data=training_data, **params)
+  81: testing_generator = DataGenerator(id_list_test, test_id_dict, data=testing_data, **params)
+  82: 
+  83: num_gpus = 2
+  84: 
+  85: if len(sys.argv) > 1:
+  86:     num_gpus = int(sys.argv[1])
+  87: 
+  88: save_path = None
+  89: 
+  90: if len(sys.argv) > 2:
+  91:     save_path = sys.argv[2]
+  92: 
+  93: 
+  94: 
+  95: 
+>>> Resulting replaced keras model:
+
+   1: def keras_fmin_fnct(space):
+   2: 
+   3:     
+   4:     np.random.seed(seed=2642)
+   5: 
+   6:     def not_quite_linear(x):
+   7:         return K.tanh(x / 5.0) * 5.0
+   8: 
+   9:     def linear_bound_above_abs_1(x):
+  10:         return K.switch(K.less(not_quite_linear(x), 0), x - 1, x + 1)
+  11:     
+  12:     get_custom_objects().update({'linear_bound_above_abs_1': Activation(linear_bound_above_abs_1)})
+  13:     get_custom_objects().update({'not_quite_linear': Activation(not_quite_linear)})
+  14:     model = Sequential()
+  15: 
+  16:     kernel_size_0 = space['kernel_size_0']
+  17: 
+  18:     model.add(torus_transform_layer((11,11),input_shape=(51,51,1)))
+  19:     model.add(Convolution2D(16, (11, 11), activation=not_quite_linear))
+  20: 
+  21:     model.add(torus_transform_layer((11,11)))
+  22:     model.add(Convolution2D(16, (11, 11), activation=not_quite_linear))
+  23: 
+  24:     model.add(torus_transform_layer((9,9)))
+  25:     model.add(Convolution2D(16, (9, 9), activation=not_quite_linear))
+  26: 
+  27:     model.add(torus_transform_layer((9, 9)))
+  28:     model.add(Convolution2D(16, (9, 9), activation=not_quite_linear))
+  29: 
+  30:     model.add(torus_transform_layer((3, 3)))
+  31:     #model.add(Convolution2D(16, (3, 3), strides=(2,2), activation=not_quite_linear))
+  32:     model.add(MaxPooling2D((3,3), strides=(2,2)))
+  33: 
+  34:     model.add(torus_transform_layer((7,7)))
+  35:     model.add(Convolution2D(32, (7, 7), activation=not_quite_linear))
+  36: 
+  37:     model.add(torus_transform_layer((7,7)))
+  38:     model.add(Convolution2D(32, (7, 7), activation=not_quite_linear))
+  39: 
+  40:     model.add(torus_transform_layer((5,5)))
+  41:     model.add(Convolution2D(32, (5, 5), activation=not_quite_linear))
+  42: 
+  43:     model.add(torus_transform_layer((5,5)))
+  44:     model.add(Convolution2D(32, (5, 5), activation=not_quite_linear))
+  45: 
+  46:     model.add(torus_transform_layer((3, 3)))
+  47:     #model.add(Convolution2D(32, (3, 3), strides=(2,2), activation=not_quite_linear))
+  48:     model.add(MaxPooling2D((3,3), strides=(2,2)))
+  49: 
+  50:     model.add(torus_transform_layer((3,3)))
+  51:     model.add(Convolution2D(64, (3, 3), activation=not_quite_linear))
+  52: 
+  53:     model.add(torus_transform_layer((3,3)))
+  54:     model.add(Convolution2D(64, (3, 3), activation=not_quite_linear))
+  55: 
+  56:     model.add(torus_transform_layer((3,3)))
+  57:     model.add(Convolution2D(64, (3, 3), activation=not_quite_linear))
+  58: 
+  59:     model.add(torus_transform_layer((3,3)))
+  60:     model.add(Convolution2D(64, (3, 3), activation=not_quite_linear))
+  61: 
+  62:     model.add(torus_transform_layer((3,3)))
+  63:     model.add(Convolution2D(64, (3, 3), activation=not_quite_linear))
+  64: 
+  65:     model.add(torus_transform_layer((3,3)))
+  66:     model.add(Convolution2D(64, (3, 3), activation=not_quite_linear))
+  67: 
+  68:     model.add(torus_transform_layer((3, 3)))
+  69:     #model.add(Convolution2D(32, (3, 3), strides=(2,2), activation=not_quite_linear))
+  70:     model.add(MaxPooling2D((3,3), strides=(2,2)))
+  71: 
+  72:     model.add(torus_transform_layer((3,3)))
+  73:     model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
+  74: 
+  75:     model.add(torus_transform_layer((3,3)))
+  76:     model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
+  77: 
+  78:     model.add(torus_transform_layer((3,3)))
+  79:     model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
+  80: 
+  81:     model.add(torus_transform_layer((3,3)))
+  82:     model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
+  83: 
+  84:     model.add(torus_transform_layer((3,3)))
+  85:     model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
+  86: 
+  87:     model.add(torus_transform_layer((3,3)))
+  88:     model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
+  89: 
+  90:     model.add(torus_transform_layer((3,3)))
+  91:     model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
+  92: 
+  93:     model.add(torus_transform_layer((3,3)))
+  94:     model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
+  95: 
+  96:     model.add(torus_transform_layer((3, 3)))
+  97:     #model.add(Convolution2D(32, (3, 3), strides=(2,2), activation=not_quite_linear))
+  98:     model.add(MaxPooling2D((3,3), strides=(2,2)))
+  99: 
+ 100:     model.add(Flatten())
+ 101: 
+ 102:     model.add(Dense(256, activation=not_quite_linear))
+ 103:     model.add(Dropout(0.4))
+ 104: 
+ 105:     model.add(Dense(256, activation=not_quite_linear))
+ 106:     model.add(Dropout(0.4))
+ 107: 
+ 108:     model.add(Dense(length, activation=linear_bound_above_abs_1))
+ 109:     
+ 110:     sgd = SGD(lr=0.00005, decay=1e-6, momentum=0.7, nesterov=True)
+ 111: 
+ 112:     if num_gpus > 1:
+ 113:         model = multi_gpu_model(model, gpus=num_gpus) 
+ 114: 
+ 115:     use_amsgrad = space['use_amsgrad']
+ 116:     
+ 117: 
+ 118:     if save_path != None:
+ 119:         model = load_model(save_path)
+ 120:     
+ 121:     model.compile(optimizer=Adam(lr=0.0001, amsgrad=use_amsgrad), loss='mean_squared_error')
+ 122:     
+ 123:     earlyStopping=EarlyStopping(monitor='val_loss', patience=8, verbose=0, mode='auto', min_delta=0.007)
+ 124: 
+ 125:     #tbCallBack = TensorBoard(log_dir='./graph', write_graph=True, write_images=True)
+ 126:     
+ 127:     model.fit_generator(generator=training_generator,
+ 128:                     validation_data=testing_generator,
+ 129:                     use_multiprocessing=True,
+ 130:                     workers=8,
+ 131:                     epochs=80,
+ 132:                     callbacks=[earlyStopping]
+ 133:                     )
+ 134:     
+ 135:     model.save('model_initial.h5')
+ 136:     
+ 137:     model.compile(optimizer=sgd, loss='mean_squared_error')
+ 138: 
+ 139:     model.fit_generator(generator=training_generator,
+ 140:                     validation_data=testing_generator,
+ 141:                     use_multiprocessing=True,
+ 142:                     workers=8,
+ 143:                     epochs=80,
+ 144:                     callbacks=[earlyStopping]
+ 145:                     )
+ 146: 
+ 147:     model.save('model_final.h5')
+ 148: 
+ 149:     acc = model.evaluate_generator(generator=testing_generator,
+ 150:                     use_multiprocessing=True,
+ 151:                     workers=8)
+ 152:     
+ 153:     print('Test accuracy:', acc)
+ 154:     
+ 155:     return {'loss': -acc, 'status': STATUS_OK, 'model': model}
+ 156: 
