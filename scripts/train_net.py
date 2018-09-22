@@ -242,7 +242,7 @@ if __name__ == '__main__':
                                           algo=tpe.suggest,
                                           max_evals=1,
                                           trials=Trials())
-    training_generator, testing_generator, length, num_gpus = data()
+    training_generator, testing_generator, length, num_gpus, weight_path, save_path = data()
     print("Evalutation of best performing model:")
     print(best_model.evaluate_generator(generator=training_generator,
                     use_multiprocessing=True,
