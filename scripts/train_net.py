@@ -131,7 +131,7 @@ def create_model(training_generator, testing_generator, training_generator_large
                          conv_first=True)
     
         # Instantiate the stack of residual units
-        for stage in range(3):
+        for stage in range(4):
             for res_block in range(num_res_blocks):
                 this_kernal = 3
                 activation = not_quite_linear
@@ -173,12 +173,6 @@ def create_model(training_generator, testing_generator, training_generator_large
                                      strides=strides,
                                      activation=None,
                                      batch_normalization=False)
-                    #x = resnet_layer(inputs=x,
-                    #                 num_filters=num_filters_out,
-                    #                 kernel_size=1,
-                    #                 strides=strides,
-                    #                 activation=None,
-                    #                 batch_normalization=False)
                 x = keras.layers.add([x, y])
     
             num_filters_in = num_filters_out
@@ -186,7 +180,7 @@ def create_model(training_generator, testing_generator, training_generator_large
         # Add classifier on top.
         # v2 has BN-ReLU before Pooling
         x = Activation(not_quite_linear)(x)
-        x = AveragePooling2D(pool_size=8)(x)
+        x = AveragePooling2D(pool_size=4)(x)
         y = Flatten()(x)
         outputs = Dense(num_classes,
                         activation=linear_bound_above_abs_1,
@@ -196,98 +190,6 @@ def create_model(training_generator, testing_generator, training_generator_large
         model = Model(inputs=inputs, outputs=outputs)
         return model
 
-
-
-
-
-    #model.add(torus_transform_layer((11,11),input_shape=(51,51,1)))
-    #model.add(Convolution2D(16, (11, 11), activation=not_quite_linear))
-
-    #model.add(torus_transform_layer((11,11)))
-    #model.add(Convolution2D(16, (11, 11), activation=not_quite_linear))
-
-    #model.add(torus_transform_layer((9,9)))
-    #model.add(Convolution2D(16, (9, 9), activation=not_quite_linear))
-
-    #model.add(torus_transform_layer((9, 9)))
-    #model.add(Convolution2D(16, (9, 9), activation=not_quite_linear))
-
-    #model.add(torus_transform_layer((3, 3)))
-    #model.add(MaxPooling2D((3,3), strides=(2,2)))
-
-    #model.add(torus_transform_layer((7,7)))
-    #model.add(Convolution2D(32, (7, 7), activation=not_quite_linear))
-
-    #model.add(torus_transform_layer((7,7)))
-    #model.add(Convolution2D(32, (7, 7), activation=not_quite_linear))
-
-    #model.add(torus_transform_layer((5,5)))
-    #model.add(Convolution2D(32, (5, 5), activation=not_quite_linear))
-
-    #model.add(torus_transform_layer((5,5)))
-    #model.add(Convolution2D(32, (5, 5), activation=not_quite_linear))
-
-    #model.add(torus_transform_layer((3, 3)))
-    #model.add(MaxPooling2D((3,3), strides=(2,2)))
-
-    #model.add(torus_transform_layer((3,3)))
-    #model.add(Convolution2D(64, (3, 3), activation=not_quite_linear))
-
-    #model.add(torus_transform_layer((3,3)))
-    #model.add(Convolution2D(64, (3, 3), activation=not_quite_linear))
-
-    #model.add(torus_transform_layer((3,3)))
-    #model.add(Convolution2D(64, (3, 3), activation=not_quite_linear))
-
-    #model.add(torus_transform_layer((3,3)))
-    #model.add(Convolution2D(64, (3, 3), activation=not_quite_linear))
-
-    #model.add(torus_transform_layer((3,3)))
-    #model.add(Convolution2D(64, (3, 3), activation=not_quite_linear))
-
-    #model.add(torus_transform_layer((3,3)))
-    #model.add(Convolution2D(64, (3, 3), activation=not_quite_linear))
-
-    #model.add(torus_transform_layer((3, 3)))
-    #model.add(MaxPooling2D((3,3), strides=(2,2)))
-
-    #model.add(torus_transform_layer((3,3)))
-    #model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
-
-    #model.add(torus_transform_layer((3,3)))
-    #model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
-
-    #model.add(torus_transform_layer((3,3)))
-    #model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
-
-    #model.add(torus_transform_layer((3,3)))
-    #model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
-
-    #model.add(torus_transform_layer((3,3)))
-    #model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
-
-    #model.add(torus_transform_layer((3,3)))
-    #model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
-
-    #model.add(torus_transform_layer((3,3)))
-    #model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
-
-    #model.add(torus_transform_layer((3,3)))
-    #model.add(Convolution2D(128, (3, 3), activation=not_quite_linear))
-
-    #model.add(torus_transform_layer((3, 3)))
-    #model.add(MaxPooling2D((3,3), strides=(2,2)))
-
-    #model.add(Flatten())
-
-    #model.add(Dense(256, activation=not_quite_linear))
-    #model.add(Dropout(0.4))
-
-    #model.add(Dense(256, activation=not_quite_linear))
-    #model.add(Dropout(0.4))
-
-    #model.add(Dense(length, activation=linear_bound_above_abs_1))
-   
     def lr_schedule(epoch):
         """Learning Rate Schedule
 
@@ -450,7 +352,7 @@ def data():
     
     training_generator = DataGenerator(id_list_train, train_id_dict, data=training_data, **params)
 
-    params['batch_size'] = 2048
+    params['batch_size'] = 512
 
     testing_generator = DataGenerator(id_list_test, test_id_dict, data=testing_data, **params)
     
