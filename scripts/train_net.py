@@ -27,7 +27,7 @@ import keras
 
 
 #https://gist.github.com/williamFalcon/b03f17991374df99ab371eaeaa7ba610
-def create_model(training_generator, testing_generator, length, num_gpus, weight_path, save_path):
+def create_model(training_generator, testing_generator, training_generator_large, length, num_gpus, weight_path, save_path):
     
     np.random.seed(seed=2642)
 
@@ -139,7 +139,7 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
                 strides = 1
                 if stage == 0:
                     this_kernal = 7
-                    num_filters_out = num_filters_in * 4
+                    num_filters_out = num_filters_in * 2
                     if res_block == 0:  # first layer and first stage
                         activation = None
                         batch_normalization = False
@@ -300,7 +300,7 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
         # Returns
             lr (float32): learning rate
         """
-        lr = 1e-3
+        lr = 1e-4
         if epoch > 180:
             lr *= 0.5e-3
         elif epoch > 160:
@@ -347,7 +347,15 @@ def create_model(training_generator, testing_generator, length, num_gpus, weight
                     validation_data=testing_generator,
                     use_multiprocessing=True,
                     workers=8,
-                    epochs=80,
+                    epochs=5,
+                    callbacks=callbacks
+                    )
+    
+    model.fit_generator(generator=training_generator_large,
+                    validation_data=testing_generator,
+                    use_multiprocessing=True,
+                    workers=8,
+                    epochs=150,
                     callbacks=callbacks
                     )
     
@@ -434,14 +442,19 @@ def data():
     
     
     params = {'dim': (51,51),
-              'batch_size': 256,
+              'batch_size': 128,
               'n_channels': 1,
               'y_dim': length,
               'y_dtype': float,
               'shuffle': True}
     
     training_generator = DataGenerator(id_list_train, train_id_dict, data=training_data, **params)
+
+    params['batch_size'] = 2048
+
     testing_generator = DataGenerator(id_list_test, test_id_dict, data=testing_data, **params)
+    
+    training_generator_large = DataGenerator(id_list_train, train_id_dict, data=training_data, **params)
     
     num_gpus = 2
     
@@ -453,7 +466,7 @@ def data():
     if len(sys.argv) > 2:
         save_path = sys.argv[2]
     
-    return training_generator, testing_generator, length, num_gpus, save_path
+    return training_generator, testing_generator, training_generator_large, length, num_gpus, save_path
 
 if __name__ == '__main__':
     best_run, best_model = optim.minimize(model=create_model,
@@ -461,7 +474,7 @@ if __name__ == '__main__':
                                           algo=tpe.suggest,
                                           max_evals=1,
                                           trials=Trials())
-    training_generator, testing_generator, length, num_gpus, weight_path, save_path = data()
+    training_generator, testing_generator, training_generator_large, length, num_gpus, weight_path, save_path = data()
     print("Evalutation of best performing model:")
     print(best_model.evaluate_generator(generator=training_generator,
                     use_multiprocessing=True,
