@@ -152,10 +152,12 @@ def create_model(training_generator, testing_generator, training_generator_large
                 y = resnet_layer(inputs=x,
                                  num_filters=num_filters_in,
                                  kernel_size=1,
-                                 strides=strides,
+                                 strides=1,
                                  activation=activation,
                                  batch_normalization=batch_normalization,
                                  conv_first=False)
+                if strides == 2:
+                    y = MaxPooling2D((2, 2), strides=(2,2))(y)
                 y = resnet_layer(inputs=y,
                                  num_filters=num_filters_in,
                                  kernel_size=this_kernal,
@@ -170,9 +172,11 @@ def create_model(training_generator, testing_generator, training_generator_large
                     x = resnet_layer(inputs=x,
                                      num_filters=num_filters_out,
                                      kernel_size=1,
-                                     strides=strides,
+                                     strides=1,
                                      activation=None,
                                      batch_normalization=False)
+                    if strides == 2:
+                        y = MaxPooling2D((2, 2), strides=(2,2))(y)
                 x = keras.layers.add([x, y])
     
             num_filters_in = num_filters_out
