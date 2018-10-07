@@ -1,6 +1,7 @@
 import numpy as np
 import keras
 import re
+import random
 
 class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
@@ -55,7 +56,7 @@ class DataGenerator(keras.utils.Sequence):
                 loaded = np.load('data_npy/' + ID + '.npy')
                 self.data[ID] = loaded.reshape(loaded.shape[0], loaded.shape[1], 1)
 
-            X[i,] = self.data[ID]
+            X[i,] = np.roll(np.roll(self.data[ID], random.randint(-25, 26), axis=0), random.randint(-25, 26), axis=1)
 
             # Store class
             #y[i] = self.get_label_from_ID(labels, ID) 
