@@ -144,6 +144,8 @@ def create_model(training_generator, testing_generator, training_generator_large
                         activation = None
                         batch_normalization = False
                 else:
+                    if stage == 1:
+                        this_kernal = 5
                     num_filters_out = num_filters_in * 2
                     if res_block == 0:  # first layer but not first stage
                         strides = 2    # downsample
